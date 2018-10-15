@@ -52,9 +52,9 @@ public class LogicManager : MonoBehaviour {
 	    foreach (var bullet in _logic.NowBullets())
 	    {
 	        GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
-	        DebugCircle(bullet.cPos,bullet.cRad, 20);
+	     //   DebugCircle(bullet.cPos,bullet.cRad, 20);
         }
-	    DebugCircle(new Vector2(20,10),1, 5);
+	   // DebugCircle(new Vector2(20,10),1, 5);
 
     }
 

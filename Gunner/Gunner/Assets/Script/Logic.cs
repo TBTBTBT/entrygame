@@ -31,7 +31,8 @@ public class InputData
 //送受信しない
 public class BulletData
 {
-    public int id; // MstBulletRecord のID
+    public int id; //固有のID 追跡用
+    public int bulletId; // MstBulletRecord のID
     public int gunnerId; // 砲撃者のID
     public int sFrame;//計算開始フレーム
     public int eFrame = -1;//計算終了フレーム
@@ -78,16 +79,19 @@ public class Logic
     private float SPF = 0.2f;//1計算fあたりの経過秒数
     //data
     private int _frameCount = 0;
+    private int _bulletCount = 0;
     private List<InputData> _logInput = new List<InputData>();
     private List<BulletData> _logBullet = new List<BulletData>();
     public List<GunnerData> Gunners { get; set; }
     public int FrameCount { get { return _frameCount; }}
+
     public void Init(List<GunnerData> gunners){
         Gunners = new List<GunnerData>();
         foreach(var gunner in gunners){
             Gunners.Add(gunner);
         }
         _frameCount = 0;
+        _bulletCount = 0;
     }
 
 
@@ -161,7 +165,7 @@ public class Logic
     }
     void CalcOrbit(float time, BulletData bullet)
     {
-        MstBulletRecord mstBullet = MasterDataManager.Get<MstBulletRecord>(bullet.id);
+        MstBulletRecord mstBullet = MasterDataManager.Get<MstBulletRecord>(bullet.bulletId);
         var gx = mstBullet.gravx;
         var gy = mstBullet.gravy;
         var wei = mstBullet.weight;
