@@ -52,7 +52,7 @@ public class WebSocketManager : MonoBehaviour
         };
         //ws.Log.Level = LogLevel.Debug;
         //ws.Log.File = Application.dataPath +"/log.txt";
-        ws.SetProxy("http://157.109.25.6:3128", "", "");
+        //ws.SetProxy("http://157.109.25.6:3128", "", "");
         // ws.Log.Level = LogLevel.Trace;
         ws.ConnectAsync();
         

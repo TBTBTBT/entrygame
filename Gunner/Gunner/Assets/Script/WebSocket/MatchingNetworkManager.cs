@@ -7,12 +7,6 @@ using WebSocketSharp;
 
 public class MatchingNetworkManager : MonoBehaviour
 {
-    [SerializeField] private Text _inputName;
-    [SerializeField] private WebSocketManager _wsModule;
-    [SerializeField] private GameNetworkManager _gameNetwork;
-    private string _matchingId = "";
-    public string GameServerAddress { get; set; } = "";
-    public string RoomId { get; set; } = "";
     public enum State
     {
         Init,
@@ -22,6 +16,17 @@ public class MatchingNetworkManager : MonoBehaviour
         Cancel,
         Close,
     }
+    [SerializeField] private Text _inputName;
+    [SerializeField] private WebSocketManager _wsModule;
+    [SerializeField] private GameNetworkManager _gameNetwork;
+
+    private readonly string DevServer = "ws://localhost:3000"; 
+    private readonly string StgServer = "wss://socketmmo.herokuapp.com/"; 
+
+    private string _matchingId = "";
+    public string GameServerAddress { get; set; } = "";
+    public string RoomId { get; set; } = "";
+
 
     private Statemachine<State> _statemachine;
     void Awake()
@@ -40,7 +45,8 @@ public class MatchingNetworkManager : MonoBehaviour
         _matchingId = "";
         GameServerAddress = "";
         RoomId = "";
-        _wsModule.Setup("wss://socketmmo.herokuapp.com/",
+        string server = DevServer;
+            _wsModule.Setup(server,
             null,
             OnMessage,
             (o,e)=>Debug.Log($"WebSocket Close Code: {e.Code} Reason: {e.Reason}"),
@@ -63,6 +69,7 @@ public class MatchingNetworkManager : MonoBehaviour
     IEnumerator Close()
     {
         _wsModule.Close();
+        _gameNetwork.SetGameRoom(GameServerAddress,RoomId);
         yield return null;
     }
     void OnMessage(object sender,MessageEventArgs e)
