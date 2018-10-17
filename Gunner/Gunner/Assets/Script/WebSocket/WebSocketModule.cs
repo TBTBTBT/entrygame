@@ -8,7 +8,7 @@ using WebSocketSharp.Net;
 
 
 
-public class WebSocketManager : MonoBehaviour
+public class WebSocketModule
 {
 
 
@@ -26,7 +26,7 @@ public class WebSocketManager : MonoBehaviour
             ws = null;
         }
 
-        Debug.Log(address);
+        Debug.Log("[ws] Connect to :" + address);
         ws = new WebSocket(address);
         ws.OnOpen += (sender, e) =>
         {
@@ -35,7 +35,7 @@ public class WebSocketManager : MonoBehaviour
         };
         ws.OnMessage += (sender, e) =>
         {
-            Debug.Log("[ws] " + e.Data);
+            Debug.Log("[ws] Message:" + e.Data);
             onmessage?.Invoke(sender, e);
         };
 
@@ -58,15 +58,36 @@ public class WebSocketManager : MonoBehaviour
         
     }
 
+    public IEnumerator SetupAsync(string address,
+        Action<object, EventArgs> onopen,
+        Action<object, MessageEventArgs> onmessage,
+        Action<object, CloseEventArgs> onclose,
+        Action<object, ErrorEventArgs> onerror)
+    {
+        Setup(address,onopen,onmessage,onclose,onerror);
+        Debug.Log("[ws] Connecting...");
+        while (!IsConnect())
+        {
+            yield return null;
+        }
+        Debug.Log("[ws] Connect.");
+    }
     public bool IsConnect()
     {
         return ws != null && ws.ReadyState == WebSocketState.Open;
     }
+
+    public bool IsClosed()
+    {
+        return ws != null && ws.ReadyState == WebSocketState.Closed;
+    }
     public void Send(string msg)
     {
+        Debug.Log("[ws] Send : "+ msg);
         ws?.Send(msg);
     }
-    private void OnApplicationQuit()
+
+    public void Close()
     {
         if (IsConnect())
         {
@@ -74,9 +95,15 @@ public class WebSocketManager : MonoBehaviour
         }
     }
 
-    public void Close()
+    public IEnumerator CloseAsync()
     {
-        ws.Close();
+        Debug.Log("[ws] Closing...");
+        ws.CloseAsync();
+        while (!IsClosed())
+        {
+            yield return null;
+        }
+        Debug.Log("[ws] Closed.");
     }
 
 

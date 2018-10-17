@@ -19,7 +19,27 @@ public class MsgMatching
     public string room;
 }
 [Serializable]
+public class MsgEntry
+{
+    public string id;
+}
+[Serializable]
 public class SendEntry
 {
     public string name;
+}
+[Serializable]
+public class SendConnectGame
+{
+    public string name;
+    public string room;
+}
+[Serializable]
+public class SendInput
+{
+    public string id;
+    public string type;
+    public int strong;
+    public int angle;
+    public int frame;
 }

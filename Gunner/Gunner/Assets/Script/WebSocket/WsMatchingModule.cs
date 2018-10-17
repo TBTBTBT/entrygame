@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using WebSocketSharp;
 
-public class MatchingNetworkManager : MonoBehaviour
+public class WsMatchingModule
 {
     public enum State
     {
@@ -15,62 +15,66 @@ public class MatchingNetworkManager : MonoBehaviour
         Wait,
         Cancel,
         Close,
+        End
     }
-    [SerializeField] private Text _inputName;
-    [SerializeField] private WebSocketManager _wsModule;
-    [SerializeField] private GameNetworkManager _gameNetwork;
-
-    private readonly string DevServer = "ws://localhost:3000"; 
-    private readonly string StgServer = "wss://socketmmo.herokuapp.com/"; 
 
     private string _matchingId = "";
-    public string GameServerAddress { get; set; } = "";
-    public string RoomId { get; set; } = "";
+    public string Server { get; set; } = "";
+
+    public string GameServerAddress { get; private set; } = "";
+    public string RoomId { get; private set; } = "";
+    private WebSocketModule _wsModule;
+
 
 
     private Statemachine<State> _statemachine;
-    void Awake()
+    public State Current => _statemachine.GetCurrentState();
+    public bool IsClose => _statemachine.GetCurrentState() == State.End;
+    public bool IsCancel { get; set; } = false;
+    public void SetWsModule(WebSocketModule ws) => _wsModule = ws;
+    public WsMatchingModule()
+    {
+        InitState();
+    }
+    public void InitState()
     {
         _statemachine = new Statemachine<State>();
         _statemachine.Init(this);
         _statemachine.Next(State.Init);
     }
 
-    void Update()
+    public void Update()
     {
         _statemachine.Update();
     }
+
     IEnumerator Init()
     {
+        while (_wsModule == null)
+        {
+            yield return null;
+        }
+        IsCancel = false;
         _matchingId = "";
         GameServerAddress = "";
         RoomId = "";
-        string server = DevServer;
-            _wsModule.Setup(server,
+        yield return _wsModule.SetupAsync(Server,
             null,
             OnMessage,
-            (o,e)=>Debug.Log($"WebSocket Close Code: {e.Code} Reason: {e.Reason}"),
+            (o,e)=>Debug.Log($"[ws] WebSocket Close Code: {e.Code} Reason: {e.Reason}"),
             null);
-        while (!_wsModule.IsConnect())
-        {
-            //Debug.Log("[ws]Connecting...");
-           // yield return new WaitForSeconds(1f);
-            yield return null;
-        }
+        
         _statemachine.Next(State.Connect);
-        yield return null;
     }
     IEnumerator Connect()
     {
-        
         yield return null;
     }
 
     IEnumerator Close()
     {
-        _wsModule.Close();
-        _gameNetwork.SetGameRoom(GameServerAddress,RoomId);
-        yield return null;
+        yield return _wsModule.CloseAsync();
+        _statemachine.Next(State.End);
     }
     void OnMessage(object sender,MessageEventArgs e)
     {
@@ -98,11 +102,12 @@ public class MatchingNetworkManager : MonoBehaviour
     {
         MsgRoot<MsgMatching> obj = JsonUtility.FromJson<MsgRoot<MsgMatching>>(msg);
         GameServerAddress = obj.data.address;
+        RoomId = obj.data.room;
         Debug.Log("[matching] room :" + obj.data.room + ", address : " + obj.data.address);
         _statemachine.Next(State.Close);
     }
     //request
-    void ReqEntry()
+    public void ReqEntry(string name)
     {
         if (_statemachine.GetCurrentState() != State.Entry)
         {
@@ -114,16 +119,12 @@ public class MatchingNetworkManager : MonoBehaviour
                 type = "connect",
                 data = new SendEntry()
                 {
-                    name = _inputName.text
+                    name = name
                 }
             };
         _wsModule.Send(JsonUtility.ToJson(obj));
         _statemachine.Next(State.Wait);
+        Debug.Log("[matching] entry name : " +name);
     }
-    //---
-    //input
-    public void OnPushSendName()
-    {
-        ReqEntry();
-    }
+
 }
