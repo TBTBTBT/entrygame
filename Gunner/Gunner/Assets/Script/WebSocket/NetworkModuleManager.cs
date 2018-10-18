@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
-
-public class NetworkModuleManager: MonoBehaviour {
+public class NetworkModuleManager: MonoBehaviour{
     public enum State
     {
         None,
@@ -13,16 +13,16 @@ public class NetworkModuleManager: MonoBehaviour {
     }
     private readonly string DevMatchingServer = "ws://localhost:3000";
     private readonly string StgMatchingServer = "wss://socketmmo.herokuapp.com/";
-    //private readonly string DevGameServer     = "ws://localhost:4000";
-    //private readonly string StgGameServer     = "wss://gamemain.herokuapp.com/";
-
+   
     [SerializeField] private bool _isDevelop;
     [SerializeField] private Text _inputName;
     [SerializeField] private Text _outputText;
+
     private WebSocketModule _wsModule;
     private WsGameModule _gameModule;
     private WsMatchingModule _matchingModule;
     private Statemachine<State> _statemachine;
+
     void Awake()
     {
         InitState();
@@ -88,13 +88,29 @@ public class NetworkModuleManager: MonoBehaviour {
     {
         _matchingModule?.ReqEntry(_inputName.text);
     }
-
+    public void OnTapSendInput(){
+        SendInput(
+            new SendInput()
+            {
+                angle = 1350,
+                type = "bullet",
+                strong = 100,
+            }
+        );
+    }
     public void SendInput(SendInput input)
     {
         if (_statemachine.GetCurrentState() == State.Game)
         {
             _gameModule?.ReqInput(input);
         }
+    }
+    public void OnRecieveMessageGame(UnityAction<string> cb){
+        _gameModule?.OnRecieveMessage.AddListener(cb);
+    }
+    public void OnRecieveMessageMatching(UnityAction<string> cb)
+    {
+        _matchingModule?.OnRecieveMessage.AddListener(cb);
     }
     void OnApplicationQuit()
     {

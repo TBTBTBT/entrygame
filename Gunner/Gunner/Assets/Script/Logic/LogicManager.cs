@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class LogicManager : MonoBehaviour {
+
+    [SerializeField] private NetworkModuleManager _networkModule;
     private Logic _logic = null;
 	// Use this for initialization
 	void Awake () {
@@ -12,9 +14,33 @@ public class LogicManager : MonoBehaviour {
             new GunnerData(){hp = 1000,id = 0,x = 100,y = 10},
             new GunnerData(){hp = 1000,id = 1,x = -100,y = 10}
         });
-	    StartCoroutine(UpdateLogic(0.2f));
+       // _networkModule.OnRecieveMessageGame(OnMessageGame);
 	}
 
+    void OnMessageGame(string msg){
+        MsgRoot<object> obj = JsonUtility.FromJson<MsgRoot<object>>(msg);
+        switch(obj.type){
+            case "start" : StartLogic(); break;
+            case "input" : RecieveInput(msg); break;
+        }
+    }
+    void RecieveInput(string msg){
+        MsgRoot<MsgInput> obj = JsonUtility.FromJson<MsgRoot<MsgInput>>(msg);
+        _logic.AddInput(new InputData()
+        {
+            angle = obj.data.angle,
+            bulletId = 10,
+            gunnerId = 0,
+            type = obj.data.type,
+            inFrame = obj.data.frame,
+            strength = obj.data.strong
+        });
+    }
+    public void StartLogic()
+    {
+        StartCoroutine(UpdateLogic(0.2f));
+    }
+    /*
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.A))
@@ -36,13 +62,15 @@ public class LogicManager : MonoBehaviour {
             });
         }
     }
+    */
 
     IEnumerator UpdateLogic(float span)
     {
-        while (true)
+        while (!_logic.IsFinish())
         {
-            _logic.NextFrame();
+
             _logic.CalcFrame();
+            _logic.NextFrame();
             yield return new WaitForSeconds(span);
         }
     }

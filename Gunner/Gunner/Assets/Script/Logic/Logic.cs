@@ -12,19 +12,20 @@ public class GunnerData
     public int hp;
 
 }
+/*
 public enum InputType
 {
     BULLET = 1,
     SKIP = 2,
     FORWARD = 3,
     BACKWARD = 4
-}
+}*/
 public class InputData
 {
     public int gunnerId;
     public int bulletId;
     public int inFrame;
-    public InputType type;
+    public string type;
     public int strength;
     public int angle;
 }
@@ -77,6 +78,7 @@ public class Logic
     //serverが計算する必要すらないかも
     //define
     private float SPF = 0.2f;//1計算fあたりの経過秒数
+    private int MAX_FRAME = 200;
     //data
     private int _frameCount = 0;
     private int _bulletCount = 0;
@@ -97,7 +99,7 @@ public class Logic
 
     void AddBullet(InputData input)
     {
-        if (input.type == InputType.BULLET)
+        if (input.type == "bullet")
         {
             _logBullet.Add(InitBullet(input));
         }
@@ -208,7 +210,9 @@ public class Logic
         CalcBullet();
         CalcCollision();
     }
-
+    public bool IsFinish(){
+        return FrameCount >= MAX_FRAME;
+    }
     public List<BulletData> HistoryBullets() => _logBullet;
     public List<BulletData> NowBullets() => _logBullet.FindAll(IsNowCalculating);
     

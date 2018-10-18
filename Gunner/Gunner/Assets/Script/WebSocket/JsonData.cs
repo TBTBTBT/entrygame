@@ -24,6 +24,15 @@ public class MsgEntry
     public string id;
 }
 [Serializable]
+public class MsgInput
+{
+    public string id;
+    public string type;
+    public int strong;
+    public int angle;
+    public int frame;
+}
+[Serializable]
 public class SendEntry
 {
     public string name;

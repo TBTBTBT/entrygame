@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using WebSocketSharp;
 using WebSocketSharp.Net;
+using UnityEngine.Events;
 
-
-
+public class MessageEvent : UnityEvent<string> { }
 public class WebSocketModule
 {
 

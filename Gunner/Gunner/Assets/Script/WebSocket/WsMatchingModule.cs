@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using WebSocketSharp;
 
@@ -17,21 +18,17 @@ public class WsMatchingModule
         Close,
         End
     }
-
+    private WebSocketModule _wsModule;
+    private Statemachine<State> _statemachine;
     private string _matchingId = "";
     public string Server { get; set; } = "";
-
     public string GameServerAddress { get; private set; } = "";
     public string RoomId { get; private set; } = "";
-    private WebSocketModule _wsModule;
-
-
-
-    private Statemachine<State> _statemachine;
     public State Current => _statemachine.GetCurrentState();
     public bool IsClose => _statemachine.GetCurrentState() == State.End;
     public bool IsCancel { get; set; } = false;
     public void SetWsModule(WebSocketModule ws) => _wsModule = ws;
+    public UnityEvent<string> OnRecieveMessage = new MessageEvent();
     public WsMatchingModule()
     {
         InitState();
@@ -88,6 +85,7 @@ public class WsMatchingModule
                 ResMatching(e.Data);
                 break;
         }
+        OnRecieveMessage.Invoke(e.Data);
     }
 
     void ResConnect(string msg)
