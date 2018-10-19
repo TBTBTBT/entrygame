@@ -31,6 +31,7 @@ public class MsgInput
     public int strong;
     public int angle;
     public int frame;
+    public int number;
 }
 [Serializable]
 public class SendEntry

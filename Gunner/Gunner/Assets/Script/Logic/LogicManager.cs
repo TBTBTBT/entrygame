@@ -2,22 +2,39 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LogicManager : MonoBehaviour {
+public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
 
+    public enum State
+    {
+        Init,
+        Wait,
+        Entry,
+        Main,
+        End
+    }
     [SerializeField] private NetworkModuleManager _networkModule;
     private Logic _logic = null;
 	// Use this for initialization
-	void Awake () {
+	IEnumerator Init () {
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
             new GunnerData(){hp = 1000,id = 0,x = 100,y = 10},
             new GunnerData(){hp = 1000,id = 1,x = -100,y = 10}
         });
-       // _networkModule.OnRecieveMessageGame(OnMessageGame);
+        Next(State.Wait);
+	    yield return null;
 	}
 
-    void OnMessageGame(string msg){
+    IEnumerator Entry()
+    {
+
+        StartCoroutine(UpdateLogic(0.2f));
+        Next(State.Main);
+        yield return null;
+
+    }
+    public void OnMessageGame(string msg){
         MsgRoot<object> obj = JsonUtility.FromJson<MsgRoot<object>>(msg);
         switch(obj.type){
             case "start" : StartLogic(); break;
@@ -26,6 +43,7 @@ public class LogicManager : MonoBehaviour {
     }
     void RecieveInput(string msg){
         MsgRoot<MsgInput> obj = JsonUtility.FromJson<MsgRoot<MsgInput>>(msg);
+
         _logic.AddInput(new InputData()
         {
             angle = obj.data.angle,
@@ -33,12 +51,18 @@ public class LogicManager : MonoBehaviour {
             gunnerId = 0,
             type = obj.data.type,
             inFrame = obj.data.frame,
-            strength = obj.data.strong
+            strength = obj.data.strong,
+            number = obj.data.number
         });
+        
     }
     public void StartLogic()
     {
-        StartCoroutine(UpdateLogic(0.2f));
+        if (Current == State.Wait)
+        {
+            Next(State.Entry);
+        }
+
     }
     /*
     void Update()
@@ -76,8 +100,12 @@ public class LogicManager : MonoBehaviour {
     }
 	// Update is called once per frame
 	void OnGUI () {
-		GUILayout.Label(_logic.FrameCount + " frame");
-	    foreach (var bullet in _logic.NowBullets())
+		GUILayout.Label(_logic.FrameCount + " frame");/*
+	    foreach (var bullet in _logic.HistoryBullets())
+	    {
+	        GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
+        }*/
+        foreach (var bullet in _logic.NowBullets())
 	    {
 	        GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
 	     //   DebugCircle(bullet.cPos,bullet.cRad, 20);
@@ -85,7 +113,7 @@ public class LogicManager : MonoBehaviour {
 	   // DebugCircle(new Vector2(20,10),1, 5);
 
     }
-
+    /*
     void DebugCircle(Vector2 center, float rad , int points)
     {
 
@@ -105,5 +133,5 @@ public class LogicManager : MonoBehaviour {
         }
         GL.End();
         GL.PopMatrix();
-    }
+    }*/
 }

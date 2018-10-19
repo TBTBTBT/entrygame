@@ -69,7 +69,7 @@ public class WsGameModule {
         {
             case "connect": ResConnect(e.Data); break;
             case "ready": ResReady(e.Data); break;
-            case "start": ResStart(); break;
+            case "start": ResStart(e.Data); break;
             case "input": break; 
         }
         OnRecieveMessage.Invoke(e.Data);
@@ -88,7 +88,7 @@ public class WsGameModule {
 
     }
 
-    void ResStart()
+    void ResStart(string msg)
     {
 
     }

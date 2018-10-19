@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-public class NetworkModuleManager: MonoBehaviour{
+public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleManager.State> {
     public enum State
     {
         None,
@@ -21,19 +21,7 @@ public class NetworkModuleManager: MonoBehaviour{
     private WebSocketModule _wsModule;
     private WsGameModule _gameModule;
     private WsMatchingModule _matchingModule;
-    private Statemachine<State> _statemachine;
 
-    void Awake()
-    {
-        InitState();
-        StartNetworking();
-    }
-    void InitState()
-    {
-        _statemachine = new Statemachine<State>();
-        _statemachine.Init(this);
-        _statemachine.Next(State.None);
-    }
 
     IEnumerator Init()
     {
@@ -46,7 +34,7 @@ public class NetworkModuleManager: MonoBehaviour{
         _gameModule.Server = "";
 
 
-        _statemachine.Next(State.Matching);
+        Next(State.Matching);
         yield return null;
     }
 
@@ -62,11 +50,11 @@ public class NetworkModuleManager: MonoBehaviour{
         _gameModule.Name = _inputName.text;
         if (_matchingModule.IsCancel)
         {
-            _statemachine.Next(State.None);
+            Next(State.None);
         }
         else
         {
-            _statemachine.Next(State.Game);
+            Next(State.Game);
         }
 
         DebugText("room " + _gameModule.RoomId);
@@ -82,7 +70,7 @@ public class NetworkModuleManager: MonoBehaviour{
     }
     public void StartNetworking()
     {
-        _statemachine.Next(State.Init);
+        Next(State.Init);
     }
     public void OnTapEntryName()
     {
@@ -100,7 +88,7 @@ public class NetworkModuleManager: MonoBehaviour{
     }
     public void SendInput(SendInput input)
     {
-        if (_statemachine.GetCurrentState() == State.Game)
+        if (Current == State.Game)
         {
             _gameModule?.ReqInput(input);
         }
@@ -112,16 +100,7 @@ public class NetworkModuleManager: MonoBehaviour{
     {
         _matchingModule?.OnRecieveMessage.AddListener(cb);
     }
-    void OnApplicationQuit()
-    {
-        _wsModule?.Close();
-    }
-	// Update is called once per frame
-	void Update ()
-	{
-	    _statemachine.Update();
-	}
-    
+
     void DebugText(string add)
     {
         if (_outputText != null)
@@ -129,4 +108,9 @@ public class NetworkModuleManager: MonoBehaviour{
             _outputText.text += add;
         }
     }
+    void OnApplicationQuit()
+    {
+        _wsModule?.Close();
+    }
+
 }

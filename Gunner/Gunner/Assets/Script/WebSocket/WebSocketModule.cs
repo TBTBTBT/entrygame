@@ -14,10 +14,26 @@ public class WebSocketModule
 
     private WebSocket ws;
 
-    public void Setup(string address,
+
+
+    public IEnumerator SetupAsync(string address,
         Action<object, EventArgs> onopen,
-        Action<object, MessageEventArgs> onmessage, 
-        Action<object, CloseEventArgs> onclose, 
+        Action<object, MessageEventArgs> onmessage,
+        Action<object, CloseEventArgs> onclose,
+        Action<object, ErrorEventArgs> onerror)
+    {
+        Setup(address,onopen,onmessage,onclose,onerror);
+        Debug.Log("[ws] Connecting...");
+        while (!IsConnect())
+        {
+            yield return null;
+        }
+        Debug.Log("[ws] Connect.");
+    }
+    void Setup(string address,
+        Action<object, EventArgs> onopen,
+        Action<object, MessageEventArgs> onmessage,
+        Action<object, CloseEventArgs> onclose,
         Action<object, ErrorEventArgs> onerror)
     {
         if (ws != null)
@@ -55,22 +71,7 @@ public class WebSocketModule
         //ws.SetProxy("http://157.109.25.6:3128", "", "");
         // ws.Log.Level = LogLevel.Trace;
         ws.ConnectAsync();
-        
-    }
 
-    public IEnumerator SetupAsync(string address,
-        Action<object, EventArgs> onopen,
-        Action<object, MessageEventArgs> onmessage,
-        Action<object, CloseEventArgs> onclose,
-        Action<object, ErrorEventArgs> onerror)
-    {
-        Setup(address,onopen,onmessage,onclose,onerror);
-        Debug.Log("[ws] Connecting...");
-        while (!IsConnect())
-        {
-            yield return null;
-        }
-        Debug.Log("[ws] Connect.");
     }
     public bool IsConnect()
     {

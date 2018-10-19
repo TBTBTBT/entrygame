@@ -28,6 +28,7 @@ public class InputData
     public string type;
     public int strength;
     public int angle;
+    public int number;//誤り制御
 }
 //送受信しない
 public class BulletData
@@ -116,7 +117,7 @@ public class Logic
         }
         ret.sFrame = input.inFrame;
         ret.eFrame = -1;
-        ret.id = input.bulletId;
+        ret.bulletId = input.bulletId;
         ret.gunnerId = input.gunnerId;
         ret.sPos = new Vector2(gunner.x, gunner.y);
         ret.cPos = new Vector2(gunner.x, gunner.y);
@@ -191,6 +192,21 @@ public class Logic
 
     public void AddInput(InputData input)
     {
+        //誤りを探す
+        //1すでに受け取っていた場合
+        if (_logInput.Find(_ => _.number == input.number) != null)
+        {
+            Debug.LogWarning("誤り検出");
+            return;
+        }
+        //2飛ばして受け取った場合
+        if (input.number!=0 &&
+            _logInput.Find(_ => _.number == input.number - 1) == null)
+        {
+            Debug.LogWarning("誤り検出");
+            return;
+        }
+
         _logInput.Add(input);
         AddBullet(input);
     }
