@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
+public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
+{
 
     public enum State
     {
@@ -14,8 +15,9 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
     }
     [SerializeField] private NetworkModuleManager _networkModule;
     private Logic _logic = null;
-	// Use this for initialization
-	IEnumerator Init () {
+    // Use this for initialization
+    IEnumerator Init()
+    {
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
@@ -23,8 +25,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
             new GunnerData(){hp = 1000,id = 1,x = -100,y = 10}
         });
         Next(State.Wait);
-	    yield return null;
-	}
+        yield return null;
+    }
 
     IEnumerator Entry()
     {
@@ -34,14 +36,29 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
         yield return null;
 
     }
-    public void OnMessageGame(string msg){
+    public void OnMessageGame(string msg)
+    {
         MsgRoot<object> obj = JsonUtility.FromJson<MsgRoot<object>>(msg);
-        switch(obj.type){
-            case "start" : StartLogic(); break;
-            case "input" : RecieveInput(msg); break;
+        switch (obj.type)
+        {
+            case "start": StartLogic(); break;
+            case "input": RecieveInput(msg); break;
         }
     }
-    void RecieveInput(string msg){
+
+    public void StartLogic()
+    {
+        if (Current == State.Wait)
+        {
+            Next(State.Entry);
+        }
+
+    }
+    public List<BulletData> NowBullets => _logic.NowBullets();
+    public bool IsFinish => _logic.IsFinish();
+    public bool IsReady => Current == State.Entry || Current == State.Main;
+    void RecieveInput(string msg)
+    {
         MsgRoot<MsgInput> obj = JsonUtility.FromJson<MsgRoot<MsgInput>>(msg);
 
         _logic.AddInput(new InputData()
@@ -54,40 +71,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
             strength = obj.data.strong,
             number = obj.data.number
         });
-        
-    }
-    public void StartLogic()
-    {
-        if (Current == State.Wait)
-        {
-            Next(State.Entry);
-        }
 
     }
-    /*
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-        //    _logic.NextFrame();
-        //    _logic.CalcFrame();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Z))
-        {
-            _logic.AddInput(new InputData()
-            {
-                angle = 1350,
-                bulletId = 10,
-                gunnerId = 0,
-                type = InputType.BULLET,
-                inFrame = _logic.FrameCount + 2,
-                strength = 100,
-            });
-        }
-    }
-    */
-
     IEnumerator UpdateLogic(float span)
     {
         while (!_logic.IsFinish())
@@ -98,21 +83,51 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State> {
             yield return new WaitForSeconds(span);
         }
     }
-	// Update is called once per frame
-	void OnGUI () {
-		GUILayout.Label(_logic.FrameCount + " frame");/*
+
+    // Update is called once per frame
+
+    /*
+void Update()
+{
+    if (Input.GetKeyDown(KeyCode.A))
+    {
+    //    _logic.NextFrame();
+    //    _logic.CalcFrame();
+    }
+
+    if (Input.GetKeyDown(KeyCode.Z))
+    {
+        _logic.AddInput(new InputData()
+        {
+            angle = 1350,
+            bulletId = 10,
+            gunnerId = 0,
+            type = InputType.BULLET,
+            inFrame = _logic.FrameCount + 2,
+            strength = 100,
+        });
+    }
+}
+*/
+#if false
+
+    void OnGUI()
+    {
+        GUILayout.Label(_logic.FrameCount + " frame");/*
 	    foreach (var bullet in _logic.HistoryBullets())
 	    {
 	        GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
         }*/
         foreach (var bullet in _logic.NowBullets())
-	    {
-	        GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
-	     //   DebugCircle(bullet.cPos,bullet.cRad, 20);
+        {
+            GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
+            //   DebugCircle(bullet.cPos,bullet.cRad, 20);
         }
-	   // DebugCircle(new Vector2(20,10),1, 5);
+        // DebugCircle(new Vector2(20,10),1, 5);
 
     }
+
+#endif
     /*
     void DebugCircle(Vector2 center, float rad , int points)
     {

@@ -54,7 +54,7 @@ public class Statemachine<T> : IStatemachine where T : struct
             
             if (method != null)
             {
-               // Debug.Log(method.Name);
+                //Debug.Log(state + "," + method.Name);
                 _stateList.Add(state, method);
             }
             

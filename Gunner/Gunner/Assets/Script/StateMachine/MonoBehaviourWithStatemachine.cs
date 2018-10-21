@@ -12,7 +12,7 @@ public abstract class MonoBehaviourWithStatemachine<T> : MonoBehaviour where T :
     {
         _statemachine = new Statemachine<T>();
         _statemachine.Init(this);
-        //_statemachine.Next((T)Enum.GetValues(typeof(T)).GetValue(0));
+        _statemachine.Next((T)Enum.GetValues(typeof(T)).GetValue(0));
     }
 
     void Update()

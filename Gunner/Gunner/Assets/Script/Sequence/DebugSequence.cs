@@ -13,7 +13,7 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
     }
     [SerializeField] private NetworkModuleManager[] _networkModules;
     [SerializeField] private LogicManager _logicManager;
-
+    [SerializeField] private GameViewManager _gameView;
     IEnumerator Init()
     {
         if (_networkModules.Length <= 0)
@@ -30,6 +30,7 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
             yield return null;
         }
         _networkModules[0].OnRecieveMessageGame(_logicManager.OnMessageGame);
+        _gameView.SetupView(_logicManager);
         Next(State.Main);
     }
 
