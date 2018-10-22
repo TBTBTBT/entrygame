@@ -10,7 +10,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         Init,
         Wait,
         Entry,
-        Main,
+        Loop,
         End
     }
     [SerializeField] private NetworkModuleManager _networkModule;
@@ -31,10 +31,18 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
     IEnumerator Entry()
     {
 
-        StartCoroutine(UpdateLogic(0.2f));
-        Next(State.Main);
+        //StartCoroutine(UpdateLogic(0.1f));
+        Next(State.Loop);
         yield return null;
 
+    }
+    IEnumerator Loop(){
+        _logic.TimeStamp();
+        while(!_logic.IsFinish()){
+            //_logic.CalcOneFrame();
+            _logic.CalcFrame();
+            yield return null;
+        }
     }
     public void OnMessageGame(string msg)
     {
@@ -56,7 +64,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
     }
     public List<BulletData> NowBullets => _logic.NowBullets();
     public bool IsFinish => _logic.IsFinish();
-    public bool IsReady => Current == State.Entry || Current == State.Main;
+    public bool IsReady => Current == State.Entry || Current == State.Loop;
     void RecieveInput(string msg)
     {
         MsgRoot<MsgInput> obj = JsonUtility.FromJson<MsgRoot<MsgInput>>(msg);
@@ -109,7 +117,8 @@ void Update()
     }
 }
 */
-#if false
+#if true
+
 
     void OnGUI()
     {
@@ -126,6 +135,7 @@ void Update()
         // DebugCircle(new Vector2(20,10),1, 5);
 
     }
+
 
 #endif
     /*

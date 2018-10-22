@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -109,12 +110,13 @@ public class Logic
     //private float SERVER_SPF = 0.2f;//サーバーの1計算fあたりの経過秒数
     private float SPF = 0.02f;//1計算フレームの経過秒数
     private int MAX_FRAME = 2000;
-    private int ADD_FRAME = 2;//serverで足される数値
+    private int ADD_FRAME = 40;//serverで足される数値
     //data
     private int _frameCount = 0;
     private List<InputData> _logInput = new List<InputData>();
     private List<BulletData> _logBullet = new List<BulletData>();
-
+    private int _startTime;
+    private float _elapsedTime = 0;
     //------------------------------------------
     //参照可能
     public float SecPerFrame => SPF;
@@ -161,10 +163,24 @@ public class Logic
         }
         _frameCount = 0;
     }
+    public void TimeStamp(){
+        _startTime = (int) (Time.realtimeSinceStartup * 1000.0f);
+    }
+    public void CalcFrame(){
+        int next = (int)(Time.realtimeSinceStartup * 1000.0f - _startTime) / 20;
+        while(next > _frameCount){
+            SkipFrame();
+        }
+//        _frameCount = next;
+    }
     //フレーム次へ
     public void NextFrame()
     {
         _frameCount++;
+    }
+    public void SkipFrame(){
+        CalcOneFrame();
+        NextFrame();
     }
     //1フレーム計算
 
@@ -186,9 +202,10 @@ public class Logic
         }
         while ((input.inFrame - ADD_FRAME) > _frameCount)
         {
+            SkipFrame();
             Debug.Log((input.inFrame - ADD_FRAME) - _frameCount);
-            CalcOneFrame();
-            NextFrame();
+       //     CalcOneFrame();
+       //     NextFrame();
         }
     }
     BulletData InitBullet(InputData input)
@@ -242,8 +259,8 @@ public class Logic
         foreach (BulletData bullet in nowCalcBullet)
         {
             int frame = _frameCount - bullet.sFrame;
-            HitGunner(_frameCount,bullet,Gunners);
-            HitBullet(_frameCount,bullet);
+           // HitGunner(_frameCount,bullet,Gunners);
+            //HitBullet(_frameCount,bullet);
             HitLand(_frameCount, bullet);
 
         }
