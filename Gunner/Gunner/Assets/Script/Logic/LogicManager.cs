@@ -21,8 +21,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
-            new GunnerData(){hp = 1000,id = 0,x = 100,y = 10},
-            new GunnerData(){hp = 1000,id = 1,x = -100,y = 10}
+            new GunnerData(){hp = 1000,id = 0,sPos = new Vector2(100,10)},
+            new GunnerData(){hp = 1000,id = 1,sPos = new Vector2(100,10)}
         });
         Next(State.Wait);
         yield return null;
@@ -78,7 +78,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         while (!_logic.IsFinish())
         {
 
-            _logic.CalcFrame();
+            _logic.CalcOneFrame();
             _logic.NextFrame();
             yield return new WaitForSeconds(span);
         }
