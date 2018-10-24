@@ -63,8 +63,10 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
 
     }
     public List<BulletData> NowBullets => _logic.NowBullets();
+    public List<GunnerData> Gunners => _logic.Gunners; 
     public bool IsFinish => _logic.IsFinish();
     public bool IsReady => Current == State.Entry || Current == State.Loop;
+    public int Frame => _logic.FrameCount;
     void RecieveInput(string msg)
     {
         MsgRoot<MsgInput> obj = JsonUtility.FromJson<MsgRoot<MsgInput>>(msg);
@@ -81,42 +83,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         });
 
     }
-    IEnumerator UpdateLogic(float span)
-    {
-        while (!_logic.IsFinish())
-        {
 
-            _logic.CalcOneFrame();
-            _logic.NextFrame();
-            yield return new WaitForSeconds(span);
-        }
-    }
-
-    // Update is called once per frame
-
-    /*
-void Update()
-{
-    if (Input.GetKeyDown(KeyCode.A))
-    {
-    //    _logic.NextFrame();
-    //    _logic.CalcFrame();
-    }
-
-    if (Input.GetKeyDown(KeyCode.Z))
-    {
-        _logic.AddInput(new InputData()
-        {
-            angle = 1350,
-            bulletId = 10,
-            gunnerId = 0,
-            type = InputType.BULLET,
-            inFrame = _logic.FrameCount + 2,
-            strength = 100,
-        });
-    }
-}
-*/
 #if true
 
 
@@ -138,25 +105,63 @@ void Update()
 
 
 #endif
-    /*
-    void DebugCircle(Vector2 center, float rad , int points)
+
+}
+/*
+void DebugCircle(Vector2 center, float rad , int points)
+{
+
+    GL.Begin(GL.LINE_STRIP);
+    GL.PushMatrix();
+    GL.LoadPixelMatrix();
+    center += new Vector2(Screen.width/2,Screen.height/2);
+    for (int i = 0; i < points; i++)
+    {
+        float radian = ((float)i / points) * Mathf.PI*2;
+        GL.Color(new Color(5,5,5,5));
+        // One vertex at transform position
+        //GL.Vertex3(0, 0, 0);
+        // Another vertex at edge of circle
+
+        GL.Vertex3((center.x  + Mathf.Cos(radian) * rad) / 1, (center.y + Mathf.Sin(radian) * rad) / 1, 0);
+    }
+    GL.End();
+    GL.PopMatrix();
+}*/
+/*
+IEnumerator UpdateLogic(float span)
+{
+    while (!_logic.IsFinish())
     {
 
-        GL.Begin(GL.LINE_STRIP);
-        GL.PushMatrix();
-        GL.LoadPixelMatrix();
-        center += new Vector2(Screen.width/2,Screen.height/2);
-        for (int i = 0; i < points; i++)
-        {
-            float radian = ((float)i / points) * Mathf.PI*2;
-            GL.Color(new Color(5,5,5,5));
-            // One vertex at transform position
-            //GL.Vertex3(0, 0, 0);
-            // Another vertex at edge of circle
-            
-            GL.Vertex3((center.x  + Mathf.Cos(radian) * rad) / 1, (center.y + Mathf.Sin(radian) * rad) / 1, 0);
-        }
-        GL.End();
-        GL.PopMatrix();
-    }*/
+        _logic.CalcOneFrame();
+        _logic.NextFrame();
+        yield return new WaitForSeconds(span);
+    }
 }
+*/
+// Update is called once per frame
+
+/*
+void Update()
+{
+if (Input.GetKeyDown(KeyCode.A))
+{
+//    _logic.NextFrame();
+//    _logic.CalcFrame();
+}
+
+if (Input.GetKeyDown(KeyCode.Z))
+{
+    _logic.AddInput(new InputData()
+    {
+        angle = 1350,
+        bulletId = 10,
+        gunnerId = 0,
+        type = InputType.BULLET,
+        inFrame = _logic.FrameCount + 2,
+        strength = 100,
+    });
+}
+}
+*/

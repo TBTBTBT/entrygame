@@ -76,6 +76,7 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
     {
         _matchingModule?.ReqEntry(_inputName.text);
     }
+    /*
     public void OnTapSendInput(){
         SendInput(
             new SendInput()
@@ -85,7 +86,7 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
                 strong = 100,
             }
         );
-    }
+    }*/
     public void SendInput(SendInput input)
     {
         if (Current == State.Game)

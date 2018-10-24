@@ -60,7 +60,7 @@ public class BulletData
 
     public void CalcOrbit(float time)
     {
-        MstBulletRecord mstBullet = MasterDataManager.Get<MstBulletRecord>(bulletId);
+        MstBulletRecord mstBullet = MasterdataManager.Get<MstBulletRecord>(bulletId);
         float cx = sPos.x + (time * strength * Mathf.Cos(angle * Mathf.Deg2Rad)) * mstBullet.weight;
         float cy = sPos.y + (time * strength * Mathf.Sin(angle * Mathf.Deg2Rad)) * mstBullet.weight;
         cy += mstBullet.gravy * time * time / 2;
@@ -86,50 +86,35 @@ public class MstBulletRecord
 }
 
 
-public static class MasterDataManager
-{
-    public static T Get<T>(int id) where T : class
-    {
-        if (typeof(T) == typeof(MstBulletRecord))
-        {
-            return (T)(object)MstBulletRecordTable.First(_ => _.id == id);
-        }
-        return null;
-    }
-    public static MstBulletRecord[] MstBulletRecordTable = {
-        new MstBulletRecord(){id = 10,gravy = -10f,gravx = 0.95f,rad = 10,weight = 1f}
-    };
-}
-
+//serverが計算する必要すらないかも
+//serverではフレームカウントしない方式に 20181022
 public class Logic
 {
-    //serverが計算する必要すらないかも
 
-    //serverではフレームカウントしない方式に 20181022
+    //----------------------------------------------------------------------------
     //define
-    //private float SERVER_SPF = 0.2f;//サーバーの1計算fあたりの経過秒数
-    private float SPF = 0.02f;//1計算フレームの経過秒数
-    private int MAX_FRAME = 2000;
-    private int ADD_FRAME = 40;//serverで足される数値
+    //----------------------------------------------------------------------------
+    private readonly float SPF = 0.02f; //使わなくしたい
+    private readonly int TIME_DIVISION = 20;//1計算フレームの長さ 1000 / x
+    private readonly int MAX_FRAME = 2000;
+    private readonly int ADD_FRAME = 20;//serverで足される数値
+    //----------------------------------------------------------------------------
     //data
+    //----------------------------------------------------------------------------
     private int _frameCount = 0;
     private List<InputData> _logInput = new List<InputData>();
     private List<BulletData> _logBullet = new List<BulletData>();
     private int _startTime;
-    private float _elapsedTime = 0;
-    //------------------------------------------
-    //参照可能
-    public float SecPerFrame => SPF;
+    private float _collectTime = 0;
+    //----------------------------------------------------------------------------
+    //public method
+    //----------------------------------------------------------------------------
     public List<GunnerData> Gunners { get; set; }
     public int FrameCount => _frameCount;
     public int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? bullet.hitGunnerIdsAndDamage[id] : 0);
     public bool IsFinish() => FrameCount >= MAX_FRAME;
     public List<BulletData> HistoryBullets() => _logBullet;
     public List<BulletData> NowBullets() => _logBullet.FindAll(IsNowCalculating);
-
-    //------------------------------------------
-    //外部呼出し
-    //------------------------------------------
     //入力
     public void AddInput(InputData input)
     {
@@ -151,8 +136,6 @@ public class Logic
         _logInput.Add(input);
         AddBullet(input);
     }
-    //------------------------------------------
-    //計算
     //初期化
     public void Init(List<GunnerData> gunners)
     {
@@ -162,14 +145,20 @@ public class Logic
             Gunners.Add(gunner);
         }
         _frameCount = 0;
+        _collectTime = 0;
     }
+    //開始
     public void TimeStamp(){
         _startTime = (int) (Time.realtimeSinceStartup * 1000.0f);
     }
+    //更新
     public void CalcFrame(){
-        int next = (int)(Time.realtimeSinceStartup * 1000.0f - _startTime) / 20;
-        while(next > _frameCount){
+        int next = (int)(Time.realtimeSinceStartup * 1000.0f - _startTime + _collectTime) / TIME_DIVISION;
+        int loopMax = 500;
+        int loopCnt = 0;
+        while(next > _frameCount && loopCnt < loopMax){
             SkipFrame();
+            loopCnt++;
         }
 //        _frameCount = next;
     }
@@ -178,7 +167,8 @@ public class Logic
     {
         _frameCount++;
     }
-    public void SkipFrame(){
+    public void SkipFrame()
+    {
         CalcOneFrame();
         NextFrame();
     }
@@ -200,12 +190,16 @@ public class Logic
         {
             _logBullet.Add(InitBullet(input));
         }
-        while ((input.inFrame - ADD_FRAME) > _frameCount)
+        int loopMax = 500;
+        int loopCnt = 0;
+        while ((input.inFrame - ADD_FRAME) > _frameCount && loopCnt < loopMax)
         {
             SkipFrame();
+            TimeCollectForward();
             Debug.Log((input.inFrame - ADD_FRAME) - _frameCount);
-       //     CalcOneFrame();
-       //     NextFrame();
+            loopCnt++;
+            //     CalcOneFrame();
+            //     NextFrame();
         }
     }
     BulletData InitBullet(InputData input)
@@ -295,7 +289,11 @@ public class Logic
     //------------------------------------------
     //ずれ訂正
     //早送り(クライアントが遅れ)
-
+    void TimeCollectForward()
+    {
+        //Debug.Log(_collectTime);
+        _collectTime += TIME_DIVISION;
+    }
     //巻き戻し
     //------------------------------------------
     //誤り訂正
@@ -320,11 +318,12 @@ public class Logic
     {
         return SPF * frame;
     }
+    /*
     public int TimeToFrame(float time)
     {
         return Mathf.CeilToInt(time / SPF);
     }
-
+    */
 
 
 

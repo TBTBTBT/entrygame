@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequence,DebugSequence.State>
 {
@@ -14,6 +15,41 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
     [SerializeField] private NetworkModuleManager[] _networkModules;
     [SerializeField] private LogicManager _logicManager;
     [SerializeField] private GameViewManager _gameView;
+    [SerializeField] private TouchUIManager _touch;
+    
+    protected void Start()
+    {
+        _touch.AddCallback(OnPointerDown,TouchMode.PointerDown);
+        _touch.AddCallback(OnPointerUp, TouchMode.PointerUp);
+    }
+
+    private Vector2 _touchStartPos;
+    void OnPointerDown(PointerEventData pe)
+    {
+        _touchStartPos = pe.position;
+    }
+    void OnPointerUp(PointerEventData pe)
+    {
+        SendInput(_touchStartPos,pe.position);
+        _touchStartPos = new Vector2(0,0);
+    }
+
+    void SendInput(Vector2 start, Vector2 end)
+    {
+        //Debug.Log($"{start} , {end}");
+        int angle = (int)(MathUtil.PointToAngle(start, end)*10);
+        int strong = (int)Mathf.Clamp((end - start).magnitude/10,0f,100f);
+        //Debug.Log($"{angle} , {strong}");
+        _networkModules[0].SendInput(
+            new SendInput()
+            {
+                angle = angle,
+                type = "bullet",
+                strong = strong,
+                frame = _logicManager.Frame
+            }
+        );
+    }
     IEnumerator Init()
     {
         if (_networkModules.Length <= 0)
