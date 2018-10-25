@@ -21,8 +21,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
-            new GunnerData(){hp = 1000,id = 0,sPos = new Vector2(100,10)},
-            new GunnerData(){hp = 1000,id = 1,sPos = new Vector2(100,10)}
+            new GunnerData(){hp = 1000,id = 1,sPos = new Vector2(100,10),speed = 0.1f},
+            new GunnerData(){hp = 1000,id = 2,sPos = new Vector2(-100,10),speed = 0.1f }
         });
         Next(State.Wait);
         yield return null;
@@ -75,7 +75,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         {
             angle = obj.data.angle,
             bulletId = 10,
-            gunnerId = 0,
+            gunnerId = obj.data.pid,
             type = obj.data.type,
             inFrame = obj.data.frame,
             strength = obj.data.strong,

@@ -13,6 +13,18 @@ public class MsgConnect
     public string id;
 }
 [Serializable]
+public class MsgReady
+{
+    [Serializable]
+    public class PlayerData
+    {
+        public string id;
+        public int pid;
+    }
+
+    public PlayerData[] member;
+}
+[Serializable]
 public class MsgMatching
 {
     public string address;
@@ -26,7 +38,7 @@ public class MsgEntry
 [Serializable]
 public class MsgInput
 {
-    public string id;
+    public int pid;
     public string type;
     public int strong;
     public int angle;

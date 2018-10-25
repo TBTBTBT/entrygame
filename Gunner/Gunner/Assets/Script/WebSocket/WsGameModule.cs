@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -20,9 +21,11 @@ public class WsGameModule {
 
     private WebSocketModule _wsModule;
     private string _gameId = "";
+    private int _gamePid = -1;
     public string Server { get; set; } = "";
     public string Name { get; set; } = "";
     public string RoomId { get; set; } = "";
+    public int PlayerId => _gamePid;
     private Statemachine<State> _statemachine;
     public State Current => _statemachine.GetCurrentState();
     public bool IsClose => _statemachine.GetCurrentState() == State.End;
@@ -45,6 +48,7 @@ public class WsGameModule {
     IEnumerator Init()
     {
         _gameId = "";
+        _gamePid = 0;
         while (_wsModule == null)
         {
             yield return null;
@@ -85,7 +89,10 @@ public class WsGameModule {
 
     void ResReady(string msg)
     {
-
+        MsgRoot<MsgReady> obj = JsonUtility.FromJson<MsgRoot<MsgReady>>(msg);
+        var data = obj.data.member.First(_ => _.id == _gameId);
+        _gamePid = data.pid;
+        Debug.Log("[game] my pid :" + _gamePid);
     }
 
     void ResStart(string msg)

@@ -64,26 +64,13 @@ public class BulletData
         float cx = sPos.x + (time * strength * Mathf.Cos(angle * Mathf.Deg2Rad)) * mstBullet.weight;
         float cy = sPos.y + (time * strength * Mathf.Sin(angle * Mathf.Deg2Rad)) * mstBullet.weight;
         cy += mstBullet.gravy * time * time / 2;
-        float rad = mstBullet.rad + mstBullet.expRad * time;
+        float rad = mstBullet.rad + mstBullet.exprad * time;
         cRad = rad;
         cPos.x = cx;
         cPos.y = cy;
     }
 }
-public class MstBulletRecord
-{
-    public int id;
-    public float gravx;//重力
-    public float gravy;
-    public float weight;//速さに影響 0~1 0が再重
-    public int atk;//攻撃力
-    public int atkRatio; //攻撃力増減
-    public float rad;//半径
-    public float radRatio;//半径増減
-    public float expRad;//爆発半径
-    public bool prevent;//弾同士ぶつかるか
 
-}
 
 
 //serverが計算する必要すらないかも
