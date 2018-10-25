@@ -21,10 +21,12 @@ public class MasterdataManager : SingletonMonoBehaviour<MasterdataManager>
         new MstBulletRecord(){id = 10,gravy = -20f,gravx = 0.95f,rad = 10,weight = 1f}
     };*/
 
-    public void Awake()
+    protected override void Awake()
     {
-        InitMasterdata(FindMasterdata());
 
+        base.Awake();
+        InitMasterdata(FindMasterdata());
+        Debug.Log(Get<MstBulletRecord>(0).gravy);
     }
 
 

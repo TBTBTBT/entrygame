@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class MasterTable<T> where T : class,IMasterRecord
+public class MasterTable<T> where T : class, IMasterRecord
 {
-    public T[] Records { get; private set; } //静的に確保
+    public Master<T> Records { get; private set; } //静的に確保
     public static MasterTable<T> _instance;
     public static MasterTable<T> Instance
     {
@@ -23,12 +24,16 @@ public class MasterTable<T> where T : class,IMasterRecord
 
     public T Get(int id)
     {
-        return Records.FirstOrDefault(_ => _.id == id);
+        return Records.Records.FirstOrDefault(_ => _.id == id);
     }
     public void Init(string path)
     {
-        Debug.Log("[Master] load path : "+path);
-       // Resources.Load<TextAsset>("SaveData");
+        string assetPath = Application.streamingAssetsPath + path;
+        Debug.Log("[Master] load path : " + assetPath);
+        string text = System.IO.File.ReadAllText(assetPath);
+        // Debug.Log(text);
+        Records = JsonUtility.FromJson<Master<T>>(text);
+        //Debug.Log(Records.Records);
     }
 }
 
@@ -37,6 +42,7 @@ public interface IMasterRecord
     int id { get; set; }
 
 }
+
 [Serializable]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class MasterPath : Attribute
@@ -47,5 +53,8 @@ public class MasterPath : Attribute
     {
         Path = path;
     }
-
+}
+[Serializable]
+public class Master<T> where T:class, IMasterRecord{
+    public T[] Records;
 }

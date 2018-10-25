@@ -1,4 +1,4 @@
-﻿
+﻿using System;
 //-----------------------------------------------------------------------------
 
 //マスターデータの定義ファイル
@@ -11,6 +11,7 @@
 
 //-----------------------------------------------------------------------------
 
+[Serializable]
 [MasterPath("/Master/mst_bullet.json")]
 public class MstBulletRecord : IMasterRecord
 {
@@ -26,6 +27,7 @@ public class MstBulletRecord : IMasterRecord
     public int prevent;//弾同士ぶつかるか
 
 }
+[Serializable]
 [MasterPath("/Master/mst_gunner.json")]
 public class MstGunnerRecord : IMasterRecord
 {

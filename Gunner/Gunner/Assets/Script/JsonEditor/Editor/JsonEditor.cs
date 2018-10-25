@@ -16,7 +16,7 @@ public class JsonEditor : EditorWindow{
     private Dictionary<string, List<string>> _data = new Dictionary<string,List<string>>();
     private Dictionary<string, int> _viewconf = new Dictionary<string,int>();//枠サイズ調整
     private IEnumerator _coroutine;
-    [MenuItem("JSON/JSONEditor")]
+    [MenuItem("MasterData/JSONEditor")]
     private static void CreateWindow()
     {
         var window = GetWindow(typeof(JsonEditor)) as JsonEditor;
@@ -91,7 +91,9 @@ public class JsonEditor : EditorWindow{
 
     IEnumerator ParseJSON()
     {
-        string[] comma = _jsonData.Split(',');
+        string list = Regex.Match(_jsonData, "\\[([\\s\\S]*)\\]").Value;
+        Debug.Log(list);
+        string[] comma = list.Split(',');
         foreach (var s in comma)
         {
             yield return null;
@@ -210,7 +212,7 @@ public class JsonEditor : EditorWindow{
             return "";
         }
         string ret = "";
-        ret += "[\n";
+        ret += "{\"Records\":[\n";
         bool isFirst1 = true;
         for (int i = 0 ; i < max ;i ++)
         {
@@ -239,7 +241,7 @@ public class JsonEditor : EditorWindow{
 
         }
         ret += "\n";
-        ret += "]";
+        ret += "]}";
         return ret;
     }
     private Vector2 scroll;

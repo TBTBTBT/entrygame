@@ -74,7 +74,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic.AddInput(new InputData()
         {
             angle = obj.data.angle,
-            bulletId = 10,
+            bulletId = 0,
             gunnerId = obj.data.pid,
             type = obj.data.type,
             inFrame = obj.data.frame,
