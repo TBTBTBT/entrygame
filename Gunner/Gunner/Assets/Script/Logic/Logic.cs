@@ -138,12 +138,23 @@ public class Logic
     public void TimeStamp(){
         _startTime = (int) (Time.realtimeSinceStartup * 1000.0f);
     }
+    //Unix時間から現フレーム計算
+    public int CalcNowFrameFromUnixTime()
+    {
+        return (int)(Time.realtimeSinceStartup * 1000.0f - _startTime + _collectTime) / TIME_DIVISION;
+    }
+    //フレームが進んだか判定
+    public bool IsNewFrame(int frame)
+    {
+        return frame > _frameCount;
+    }
     //更新
-    public void CalcFrame(){
-        int next = (int)(Time.realtimeSinceStartup * 1000.0f - _startTime + _collectTime) / TIME_DIVISION;
+    public void CalcFrame()
+    {
+        int next = CalcNowFrameFromUnixTime();
         int loopMax = 500;
         int loopCnt = 0;
-        while(next > _frameCount && loopCnt < loopMax){
+        while(IsNewFrame(next) && loopCnt < loopMax){
             SkipFrame();
             loopCnt++;
         }
@@ -165,9 +176,10 @@ public class Logic
     {
         //cPos更新
         CalcBullet();
+        CalcGunner();
         //cPos使って判定
         CalcCollision();
-        CalcGunner();
+        
     }
     //------------------------------------------
     //内部呼出し
