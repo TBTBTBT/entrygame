@@ -22,7 +22,28 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
         _touch.AddCallback(OnPointerDown,TouchMode.PointerDown);
         _touch.AddCallback(OnPointerUp, TouchMode.PointerUp);
     }
+    IEnumerator Init()
+    {
+        if (_networkModules.Length <= 0)
+        {
+            yield break;
+        }
+        foreach (var networkModule in _networkModules)
+        {
+            networkModule.StartNetworking();
+        }
+        yield return null;
+        while (!_networkModules.Aggregate(true, (current, networkModule) => current & networkModule.Current != NetworkModuleManager.State.Init))
+        {//接続待ち
+            yield return null;
+        }
+        //ネットワークモジュールにロジックのInputを接続
+        _networkModules[0].OnRecieveMessageGame(_logicManager.OnMessageGame);
+        _gameView.SetupView(_logicManager);
+        Next(State.Main);
+    }
 
+    //入力系統
     private Vector2 _touchStartPos;
     void OnPointerDown(PointerEventData pe)
     {
@@ -50,24 +71,6 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
             }
         );
     }
-    IEnumerator Init()
-    {
-        if (_networkModules.Length <= 0)
-        {
-            yield break;
-        }
-        foreach (var networkModule in _networkModules)
-        {
-            networkModule.StartNetworking();
-        }
-        yield return null;
-        while (!_networkModules.Aggregate(true, (current, networkModule) => current & networkModule.Current != NetworkModuleManager.State.Init))
-        {
-            yield return null;
-        }
-        _networkModules[0].OnRecieveMessageGame(_logicManager.OnMessageGame);
-        _gameView.SetupView(_logicManager);
-        Next(State.Main);
-    }
+
 
 }

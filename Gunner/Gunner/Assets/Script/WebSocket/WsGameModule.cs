@@ -6,7 +6,10 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using WebSocketSharp;
-
+/// <summary>
+/// 入力を送信し、サーバーでUnix時間判定し、フレームを付加してブロードキャストする。
+/// ゲーム内情報は一切扱わない
+/// </summary>
 public class WsGameModule {
     public enum State
     {
