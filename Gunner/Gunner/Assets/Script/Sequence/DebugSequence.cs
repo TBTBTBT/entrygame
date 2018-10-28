@@ -59,7 +59,7 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
     {
         //Debug.Log($"{start} , {end}");
         int angle = (int)(MathUtil.PointToAngle(start, end)*10);
-        int strong = (int)Mathf.Clamp((end - start).magnitude/10,0f,100f);
+        int strong = (int)Mathf.Clamp((end - start).magnitude/2,0f,100f);
         //Debug.Log($"{angle} , {strong}");
         _networkModules[0].SendInput(
             new SendInput()

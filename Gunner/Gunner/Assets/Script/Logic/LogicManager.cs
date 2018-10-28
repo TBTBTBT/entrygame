@@ -21,8 +21,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
-            new GunnerData(){hp = 1000,id = 1,sPos = new Vector2(100,10),speed = 0.1f},
-            new GunnerData(){hp = 1000,id = 2,sPos = new Vector2(-100,10),speed = 0.1f }
+            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),speed = 0.1f},
+            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),speed = 0.1f }
         });
         Next(State.Wait);
         yield return null;
@@ -96,10 +96,14 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         }*/
         foreach (var bullet in _logic.NowBullets())
         {
-            GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
+         //   GUILayout.Label($"[bullet] { bullet.cPos.x } , { bullet.cPos.y } ");
+
             //   DebugCircle(bullet.cPos,bullet.cRad, 20);
         }
         // DebugCircle(new Vector2(20,10),1, 5);
+        //foreach(var gunner in _logic.Gunners){
+        //    GUILayout.Label(_logic.NowDamage(gunner.id).ToString());
+        //}
 
     }
 

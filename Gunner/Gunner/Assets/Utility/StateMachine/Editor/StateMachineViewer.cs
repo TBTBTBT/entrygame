@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-
+using System.Text.RegularExpressions;
 public class StateMachineViewer: EditorWindow{
     
 
@@ -32,11 +32,12 @@ public class StateMachineViewer: EditorWindow{
             w.TryGetTarget(out t);
             if (t != null)
             {
-                GUILayout.BeginVertical(GUI.skin.box);
-                GUILayout.Label(t.ToString(), new GUIStyle() { fontSize = 14},GUILayout.Width(300));
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(t.StateName(),(GUIStyle)"OL Title", GUILayout.Width(150));
-                GUILayout.Label(t.IsContinued() ? "継続" : "終了" , (GUIStyle)"OL Title",GUILayout.Width(50));
+                GUILayout.BeginVertical("box", GUILayout.Height(20), GUILayout.Width(150),GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false));
+                string list = Regex.Match(t.ToString(), "\\[([\\s\\S]*)\\]").Value;
+                GUILayout.Label(list);//,GUILayout.Height(20));
+                GUILayout.BeginHorizontal("box",GUILayout.ExpandHeight(false),GUILayout.ExpandWidth(false));
+                GUILayout.Label(t.StateName(), GUILayout.Width(120));
+                GUILayout.Label(t.IsContinued() ? "継続" : "終了" , GUILayout.Width(30));
                 GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
                 //EditorGUILayout.LabelField(t.ToString(),Color.white, Color.black, 18);
@@ -47,3 +48,4 @@ public class StateMachineViewer: EditorWindow{
     }
 
 }
+

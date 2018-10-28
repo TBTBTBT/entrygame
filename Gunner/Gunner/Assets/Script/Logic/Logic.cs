@@ -12,7 +12,8 @@ public class GunnerData
     public Vector2 cPos;
     public float speed;
     public int Direction = 1;// 左向き -1
-    public int hp;
+    public int sHp;
+    public int cHp;
     public float kbLog;//今までのkb値の累計
     public float rad;
     public void CalcPos(float time)
@@ -98,7 +99,7 @@ public class Logic
     //----------------------------------------------------------------------------
     public List<GunnerData> Gunners { get; set; }
     public int FrameCount => _frameCount;
-    public int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? bullet.hitGunnerIdsAndDamage[id] : 0);
+    public int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? dmg + bullet.hitGunnerIdsAndDamage[id] : dmg);
     public bool IsFinish() => FrameCount >= MAX_FRAME;
     public List<BulletData> HistoryBullets() => _logBullet;
     public List<BulletData> NowBullets() => _logBullet.FindAll(IsNowCalculating);
@@ -160,16 +161,29 @@ public class Logic
         }
 //        _frameCount = next;
     }
-    //フレーム次へ
-    public void NextFrame()
-    {
-        _frameCount++;
-    }
-    public void SkipFrame()
+    //1フレーム進める
+    void SkipFrame()
     {
         CalcOneFrame();
         NextFrame();
     }
+    //------------------------------------------
+    //ずれ訂正
+    //早送り(クライアントが遅れ)
+    void TimeCollectForward()
+    {
+        //Debug.Log(_collectTime);
+        _collectTime += TIME_DIVISION;
+    }
+
+    //巻き戻し
+    //------------------------------------------
+    //誤り訂正
+    //再入力対策
+    //入力飛ばし対策
+
+
+
     //1フレーム計算
 
     public void CalcOneFrame()
@@ -181,8 +195,15 @@ public class Logic
         CalcCollision();
         
     }
+    //フレーム次へ
+    public void NextFrame()
+    {
+        _frameCount++;
+    }
     //------------------------------------------
     //内部呼出し
+
+
     void AddBullet(InputData input)
     {
         if (input.type == "bullet")
@@ -255,7 +276,7 @@ public class Logic
            // HitGunner(_frameCount,bullet,Gunners);
             //HitBullet(_frameCount,bullet);
             HitLand(_frameCount, bullet);
-
+            HitGunner(_frameCount, bullet, Gunners);
         }
     }
     void HitLand(int frame,BulletData bullet)
@@ -274,32 +295,27 @@ public class Logic
     {
         foreach (var gunner in gunners)
         {
-            if (CheckCollision(gunner.cPos, gunner.rad, bullet.cPos, bullet.cRad))
+            if(bullet.gunnerId == gunner.id){
+                continue;
+            }
+            if (!CheckCollision(gunner.cPos, gunner.rad, bullet.cPos, bullet.cRad))
+            {
+                continue;
+            }
+            if (bullet?.eFrame == -1 || bullet?.eFrame >= frame)
             {
                 bullet.eFrame = frame;
+                //マスターから引っ張る
+                bullet.hitGunnerIdsAndDamage.Add(gunner.id, 100);
             }
         }
     }
 
     bool CheckCollision(Vector2 pos1 ,float rad1 ,Vector2 pos2 ,float rad2)
     {
-        return pos2.magnitude - pos1.magnitude <= rad1 + rad2;
+        return Mathf.Abs((pos2 - pos1).magnitude) <= rad1 + rad2;
     }
-    //------------------------------------------
-    //ずれ訂正
-    //早送り(クライアントが遅れ)
-    void TimeCollectForward()
-    {
-        //Debug.Log(_collectTime);
-        _collectTime += TIME_DIVISION;
-    }
-    //巻き戻し
-    //------------------------------------------
-    //誤り訂正
-    //再入力対策
-    //入力飛ばし対策
-
-
+   
 
 
 
