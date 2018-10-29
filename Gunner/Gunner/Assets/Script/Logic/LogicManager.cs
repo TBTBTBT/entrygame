@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
@@ -21,8 +22,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
-            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),speed = 0.1f},
-            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),speed = 0.1f }
+            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),speed = -0.1f ,rad = 5},
+            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),speed = 0.1f ,rad = 5}
         });
         Next(State.Wait);
         yield return null;
@@ -49,11 +50,20 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         MsgRoot<object> obj = JsonUtility.FromJson<MsgRoot<object>>(msg);
         switch (obj.type)
         {
-            case "start": StartLogic(); break;
+            case "ready": ResReady(msg); break;
+            case "start": StartLogic();  break;
             case "input": RecieveInput(msg); break;
+            
         }
     }
-
+    void ResReady(string msg)
+    {
+        Debug.Log("SetRule");
+        MsgRoot<MsgReady> obj = JsonUtility.FromJson<MsgRoot<MsgReady>>(msg);
+        var rule = obj.data.rule;
+        _logic.SetServerData(rule.time,rule.add);
+        Debug.Log("SetRule");
+    }
     public void StartLogic()
     {
         if (Current == State.Wait)
@@ -101,9 +111,9 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
             //   DebugCircle(bullet.cPos,bullet.cRad, 20);
         }
         // DebugCircle(new Vector2(20,10),1, 5);
-        //foreach(var gunner in _logic.Gunners){
-        //    GUILayout.Label(_logic.NowDamage(gunner.id).ToString());
-        //}
+        foreach(var gunner in _logic.Gunners){
+            GUILayout.Label(gunner.cHp.ToString());
+        }
 
     }
 

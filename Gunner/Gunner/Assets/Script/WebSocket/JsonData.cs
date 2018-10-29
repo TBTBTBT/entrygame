@@ -21,8 +21,14 @@ public class MsgReady
         public string id;
         public int pid;
     }
-
+    [Serializable]
+    public class RuleData
+    {
+        public int time = 0;
+        public int add = 0;
+    }
     public PlayerData[] member;
+    public RuleData rule;
 }
 [Serializable]
 public class MsgMatching

@@ -52,7 +52,8 @@ public class GameViewManager : MonoBehaviourWithStatemachine<GameViewManager.Sta
             foreach (var gunner in _logicManager.Gunners)
             {
                 GunnerViewData data = _gunnerInstance.Find(_ => _.Id == gunner.id);
-                data.Model.transform.position = gunner.cPos / 10;
+                data.Model.transform.position = gunner.cPos;
+                data.Model.transform.localScale = new Vector3(1,1,1) * gunner.rad;
             }
             foreach(var bullet in _logicManager.NowBullets){
                 BulletViewData data = _bulletInstance.Find(_ => _.number == bullet.number);
@@ -64,7 +65,8 @@ public class GameViewManager : MonoBehaviourWithStatemachine<GameViewManager.Sta
                     };
                     _bulletInstance.Add(data);
                 }
-                data.Model.transform.localPosition = bullet.cPos/10;
+                data.Model.transform.localPosition = bullet.cPos;
+                data.Model.transform.localScale = new Vector3(1, 1, 1) * bullet.cRad;
             }
             yield return null;
         }

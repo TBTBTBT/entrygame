@@ -65,7 +65,7 @@ public class BulletData
         float cx = sPos.x + (time * strength * Mathf.Cos(angle * Mathf.Deg2Rad)) * mstBullet.weight;
         float cy = sPos.y + (time * strength * Mathf.Sin(angle * Mathf.Deg2Rad)) * mstBullet.weight;
         cy += mstBullet.gravy * time * time / 2;
-        float rad = mstBullet.rad + mstBullet.exprad * time;
+        float rad = mstBullet.rad + mstBullet.radratio * time;
         cRad = rad;
         cPos.x = cx;
         cPos.y = cy;
@@ -84,12 +84,14 @@ public class Logic
     //----------------------------------------------------------------------------
     private readonly float SPF = 0.02f; //使わなくしたい
     private readonly int TIME_DIVISION = 20;//1計算フレームの長さ 1000 / x
-    private readonly int MAX_FRAME = 2000;
-    private readonly int ADD_FRAME = 20;//serverで足される数値
+    //private readonly int MAX_FRAME = 2000;
+    //private readonly int ADD_FRAME = 20;//serverで足される数値
     //----------------------------------------------------------------------------
     //data
     //----------------------------------------------------------------------------
     private int _frameCount = 0;
+    private int _addFrame = 0;
+    private int _maxTime = 0;
     private List<InputData> _logInput = new List<InputData>();
     private List<BulletData> _logBullet = new List<BulletData>();
     private int _startTime;
@@ -99,10 +101,16 @@ public class Logic
     //----------------------------------------------------------------------------
     public List<GunnerData> Gunners { get; set; }
     public int FrameCount => _frameCount;
-    public int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? dmg + bullet.hitGunnerIdsAndDamage[id] : dmg);
-    public bool IsFinish() => FrameCount >= MAX_FRAME;
+
+    public bool IsFinish() => FrameCount >= _maxTime / TIME_DIVISION;
     public List<BulletData> HistoryBullets() => _logBullet;
     public List<BulletData> NowBullets() => _logBullet.FindAll(IsNowCalculating);
+
+    public void SetServerData(int maxTime,int addFrame)
+    {
+        _maxTime = maxTime;
+        _addFrame = addFrame;
+    }
     //入力
     public void AddInput(InputData input)
     {
@@ -212,11 +220,11 @@ public class Logic
         }
         int loopMax = 500;
         int loopCnt = 0;
-        while ((input.inFrame - ADD_FRAME) > _frameCount && loopCnt < loopMax)
+        while ((input.inFrame - _addFrame) > _frameCount && loopCnt < loopMax)
         {
             SkipFrame();
             TimeCollectForward();
-            Debug.Log((input.inFrame - ADD_FRAME) - _frameCount);
+            Debug.Log((input.inFrame - _addFrame) - _frameCount);
             loopCnt++;
             //     CalcOneFrame();
             //     NextFrame();
@@ -291,8 +299,10 @@ public class Logic
     {
 
     }
+
     void HitGunner(int frame,BulletData bullet,List<GunnerData> gunners)
     {
+        bool isHit = false;
         foreach (var gunner in gunners)
         {
             if(bullet.gunnerId == gunner.id){
@@ -304,9 +314,18 @@ public class Logic
             }
             if (bullet?.eFrame == -1 || bullet?.eFrame >= frame)
             {
+                isHit = true;
                 bullet.eFrame = frame;
                 //マスターから引っ張る
                 bullet.hitGunnerIdsAndDamage.Add(gunner.id, 100);
+            }
+        }
+
+        if (isHit)
+        {
+            foreach (var gunner in gunners)
+            {
+                gunner.cHp = NowDamage(gunner.id);
             }
         }
     }
@@ -324,11 +343,12 @@ public class Logic
     { //現在のフレームが計算開始フレーム以上かつ、（　計算が終了していない または 計算終了フレーム以下。(再計算対応))
         return bullet?.sFrame <= _frameCount && ( bullet?.eFrame == -1 || bullet?.eFrame >= _frameCount);
     }
-    
+
+
+    int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? dmg + bullet.hitGunnerIdsAndDamage[id] : dmg);
 
 
 
-    
     public float FrameToTime(int frame)
     {
         return SPF * frame;

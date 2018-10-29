@@ -9,7 +9,8 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
         None,
         Init,
         Matching,
-        Game
+        Game,
+
     }
     private readonly string DevMatchingServer = "ws://localhost:3000";
     private readonly string StgMatchingServer = "wss://socketmmo.herokuapp.com/";
@@ -22,9 +23,9 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
     private WsGameModule _gameModule;
     private WsMatchingModule _matchingModule;
 
-
     IEnumerator Init()
     {
+        RemoveListener();
         _wsModule = new WebSocketModule();
         _matchingModule = new WsMatchingModule();
         _gameModule = new WsGameModule();
@@ -68,6 +69,7 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
             yield return null;
         }
     }
+
     public void StartNetworking()
     {
         Next(State.Init);
@@ -95,13 +97,33 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
         }
     }
     public void OnRecieveMessageGame(UnityAction<string> cb){
-        _gameModule?.OnRecieveMessage.AddListener(cb);
+        if (_testMode)
+        {
+            _gameModule?.OnRecieveMessage.AddListener(_=> { StartCoroutine(DelayMessage(_, cb)); });
+        }
+        else
+        {
+            _gameModule?.OnRecieveMessage.AddListener(cb);
+        }
     }
     public void OnRecieveMessageMatching(UnityAction<string> cb)
     {
-        _matchingModule?.OnRecieveMessage.AddListener(cb);
+        if (_testMode)
+        {
+            _matchingModule?.OnRecieveMessage.AddListener(_=> { StartCoroutine(DelayMessage(_, cb)); });
+        }
+        else
+        {
+            _matchingModule?.OnRecieveMessage.AddListener(cb);
+        }
+
     }
 
+    void RemoveListener()
+    {
+        _gameModule?.OnRecieveMessage?.RemoveAllListeners();
+        _matchingModule?.OnRecieveMessage?.RemoveAllListeners();
+    }
     void DebugText(string add)
     {
         if (_outputText != null)
@@ -113,5 +135,19 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
     {
         _wsModule?.Close();
     }
+    //testcode
+
+    [Header("遅延テスト")]
+    [SerializeField] private bool _testMode = false;
+    [Header("遅延秒数")]
+    [SerializeField] private float _delayTime = 1f;
+    [Header("データ損失レート")]
+    [SerializeField] private float _dataLossRate = 1f;
+    IEnumerator DelayMessage(string msg, UnityAction<string> cb)
+    {
+        yield return new WaitForSeconds(_delayTime);
+        cb(msg);
+    }
+
 
 }
