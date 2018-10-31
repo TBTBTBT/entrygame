@@ -4,231 +4,91 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-//送受信する
-public class GunnerData
-{
-    public int id;
-    public Vector2 sPos;
-    public Vector2 cPos;
-    public float speed;
-    public int Direction = 1;// 左向き -1
-    public int sHp;
-    public int cHp;
-    public float kbLog;//今までのkb値の累計
-    public float rad;
-    public void CalcPos(float time)
-    {
-        cPos = sPos + new Vector2(Direction * (speed * time + kbLog),0);
-    }
-
-}
-/*
-public enum InputType
-{
-    BULLET = 1,
-    SKIP = 2,
-    FORWARD = 3,
-    BACKWARD = 4
-}*/
-public class InputData
-{
-    public int gunnerId;
-    public int bulletId;
-    public int inFrame;
-    public string type;
-    public int strength;
-    public int angle;
-    public int number;//誤り制御
-}
-//送受信しない
-public class BulletData
-{
-    public int number; //固有のID 追跡用
-    public int bulletId; // MstBulletRecord のID
-    public int gunnerId; // 砲撃者のID
-    public int sFrame;//計算開始フレーム
-    //public int ieFrame = -1;//計算終了フレーム(仮)
-    public int eFrame = -1;//計算終了フレーム(真)
-    public float strength;// 1/10
-    public float angle;// 1/10
-    public float cRad;
-    public Vector2 sPos;//始点
-    //public Vector2 iePos;//imaginary終点 そのまま着弾した場合の終点
-    public Vector2 ePos;//true終点 相手の弾によっても変化
-    public Dictionary<int,int> hitGunnerIdsAndDamage;//ヒットしたプレイヤーと受けたダメージのペア
-    //見た目のみのために必要
-    public Vector2 cPos;//現在の点
-
-    public void CalcOrbit(float time)
-    {
-        MstBulletRecord mstBullet = MasterdataManager.Get<MstBulletRecord>(bulletId);
-        float cx = sPos.x + (time * strength * Mathf.Cos(angle * Mathf.Deg2Rad)) * mstBullet.weight;
-        float cy = sPos.y + (time * strength * Mathf.Sin(angle * Mathf.Deg2Rad)) * mstBullet.weight;
-        cy += mstBullet.gravy * time * time / 2;
-        float rad = mstBullet.rad + mstBullet.radratio * time;
-        cRad = rad;
-        cPos.x = cx;
-        cPos.y = cy;
-    }
-}
-
-
 
 //serverが計算する必要すらないかも
 //serverではフレームカウントしない方式に 20181022
 public class Logic
 {
 
-    //----------------------------------------------------------------------------
-    //define
-    //----------------------------------------------------------------------------
+
     private readonly float SPF = 0.02f; //使わなくしたい
-    private readonly int TIME_DIVISION = 20;//1計算フレームの長さ 1000 / x
-    //private readonly int MAX_FRAME = 2000;
-    //private readonly int ADD_FRAME = 20;//serverで足される数値
-    //----------------------------------------------------------------------------
-    //data
-    //----------------------------------------------------------------------------
-    private int _frameCount = 0;
-    private int _addFrame = 0;
-    private int _maxTime = 0;
-    private List<InputData> _logInput = new List<InputData>();
-    private List<BulletData> _logBullet = new List<BulletData>();
-    private int _startTime;
-    private float _collectTime = 0;
+    //private List<InputData> _logInput = new List<InputData>();
+    //private int _inputNumber = -1;
+    private List<BulletData> _logBullet = new List<BulletData>();//計算終了
+    private List<BulletData> _nowBullet = new List<BulletData>();//計算中
+    private List<BulletData> _reserveBullet = new List<BulletData>();//計算予約　
     //----------------------------------------------------------------------------
     //public method
     //----------------------------------------------------------------------------
     public List<GunnerData> Gunners { get; set; }
-    public int FrameCount => _frameCount;
-
-    public bool IsFinish() => FrameCount >= _maxTime / TIME_DIVISION;
     public List<BulletData> HistoryBullets() => _logBullet;
-    public List<BulletData> NowBullets() => _logBullet.FindAll(IsNowCalculating);
+    public List<BulletData> NowBullets() => _nowBullet;
 
-    public void SetServerData(int maxTime,int addFrame)
-    {
-        _maxTime = maxTime;
-        _addFrame = addFrame;
-    }
+
     //入力
     public void AddInput(InputData input)
     {
-        //誤りを探す
-        //1すでに受け取っていた場合
-        if (_logInput.Find(_ => _.number == input.number) != null)
-        {
-            Debug.LogWarning("誤り検出");
-            return;
-        }
-        //2飛ばして受け取った場合
-        if (input.number != 0 &&
-            _logInput.Find(_ => _.number == input.number - 1) == null)
-        {
-            Debug.LogWarning("誤り検出");
-            return;
-        }
 
-        _logInput.Add(input);
+        //_inputNumber = input.number;
         AddBullet(input);
     }
     //初期化
     public void Init(List<GunnerData> gunners)
     {
+        //_inputNumber = -1;
         Gunners = new List<GunnerData>();
         foreach (var gunner in gunners)
         {
             Gunners.Add(gunner);
         }
-        _frameCount = 0;
-        _collectTime = 0;
     }
-    //開始
-    public void TimeStamp(){
-        _startTime = (int) (Time.realtimeSinceStartup * 1000.0f);
-    }
-    //Unix時間から現フレーム計算
-    public int CalcNowFrameFromUnixTime()
-    {
-        return (int)(Time.realtimeSinceStartup * 1000.0f - _startTime + _collectTime) / TIME_DIVISION;
-    }
-    //フレームが進んだか判定
-    public bool IsNewFrame(int frame)
-    {
-        return frame > _frameCount;
-    }
-    //更新
-    public void CalcFrame()
-    {
-        int next = CalcNowFrameFromUnixTime();
-        int loopMax = 500;
-        int loopCnt = 0;
-        while(IsNewFrame(next) && loopCnt < loopMax){
-            SkipFrame();
-            loopCnt++;
-        }
-//        _frameCount = next;
-    }
-    //1フレーム進める
-    void SkipFrame()
-    {
-        CalcOneFrame();
-        NextFrame();
-    }
-    //------------------------------------------
-    //ずれ訂正
-    //早送り(クライアントが遅れ)
-    void TimeCollectForward()
-    {
-        //Debug.Log(_collectTime);
-        _collectTime += TIME_DIVISION;
-    }
-
-    //巻き戻し
-    //------------------------------------------
-    //誤り訂正
-    //再入力対策
-    //入力飛ばし対策
-
 
 
     //1フレーム計算
-
-    public void CalcOneFrame()
+    public void Calc(int frame)
     {
+        UpdateBulletList(frame);
         //cPos更新
-        CalcBullet();
-        CalcGunner();
+        CalcBullet(frame);
+        CalcGunner(frame);
         //cPos使って判定
-        CalcCollision();
-        
+        CalcCollision(frame);
     }
-    //フレーム次へ
-    public void NextFrame()
+    //特定フレームまで巻き戻し
+    public void RollBack(int frameCount)
     {
-        _frameCount++;
+        List<BulletData> reCalcBullet = _logBullet.FindAll(_ => IsNowCalculating(_, frameCount));
+        List<BulletData> futureBullet = _logBullet.FindAll(_ => IsFutureCalcurate(_, frameCount));
+        futureBullet.AddRange(_nowBullet.FindAll(_ => IsFutureCalcurate(_, frameCount)));
+        _logBullet.RemoveAll(_ => IsNowCalculating(_, frameCount) || IsFutureCalcurate(_, frameCount));
+        _nowBullet.RemoveAll(_ => IsFutureCalcurate(_, frameCount));
+        _reserveBullet.AddRange(futureBullet);
+        _nowBullet.AddRange(reCalcBullet);
     }
-    //------------------------------------------
-    //内部呼出し
 
+    int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? dmg + bullet.hitGunnerIdsAndDamage[id] : dmg);
+
+    private void UpdateBulletList(int frameCount)
+    {
+        //状態アップデート
+        //リストアップ
+        List<BulletData> nowCalcBullet = _reserveBullet.FindAll(_ => IsNowCalculating(_, frameCount));
+        List<BulletData> logBullet = _nowBullet.FindAll(_ => !IsNowCalculating(_, frameCount));
+        //削除
+        _reserveBullet.RemoveAll(_ => IsNowCalculating(_, frameCount));
+        _nowBullet.RemoveAll(_ => !IsNowCalculating(_, frameCount));
+        //追加
+        _nowBullet.AddRange(nowCalcBullet);
+        _logBullet.AddRange(logBullet);
+    }
 
     void AddBullet(InputData input)
     {
         if (input.type == "bullet")
         {
-            _logBullet.Add(InitBullet(input));
+            _reserveBullet.Add(InitBullet(input));
         }
-        int loopMax = 500;
-        int loopCnt = 0;
-        while ((input.inFrame - _addFrame) > _frameCount && loopCnt < loopMax)
-        {
-            SkipFrame();
-            TimeCollectForward();
-            Debug.Log((input.inFrame - _addFrame) - _frameCount);
-            loopCnt++;
-            //     CalcOneFrame();
-            //     NextFrame();
-        }
+
     }
     BulletData InitBullet(InputData input)
     {
@@ -254,37 +114,40 @@ public class Logic
         return ret;
     }
 
-
-    //弾の処理
-    void CalcBullet()
+    float FrameToTime(int frame)
     {
-        List<BulletData> nowCalcBullet = _logBullet.FindAll(IsNowCalculating);//現在計算されるべき弾
-        foreach (BulletData bullet in nowCalcBullet)
+        return frame * SPF;
+    }
+    //弾の処理
+    void CalcBullet(int frameCount)
+    {
+        //List<BulletData> nowCalcBullet = _logBullet.FindAll(_ => IsNowCalculating(_, frameCount));//現在計算されるべき弾
+        foreach (BulletData bullet in _nowBullet)
         {
-            int frame = _frameCount - bullet.sFrame;
+            int frame = frameCount - bullet.sFrame;
             bullet.CalcOrbit(FrameToTime(frame));//cPos更新
            
         }
     }
 
 
-    void CalcGunner()
+    void CalcGunner(int frameCount)
     {
         foreach (var gunner in Gunners)
         {
-            gunner.CalcPos(FrameToTime(_frameCount));
+            gunner.CalcPos(FrameToTime(frameCount));
         }
     }
-    void CalcCollision()
+    void CalcCollision(int frameCount)
     {
-        List<BulletData> nowCalcBullet = _logBullet.FindAll(IsNowCalculating);
-        foreach (BulletData bullet in nowCalcBullet)
+        
+        foreach (BulletData bullet in _nowBullet)
         {
-            int frame = _frameCount - bullet.sFrame;
+            int frame = frameCount - bullet.sFrame;
            // HitGunner(_frameCount,bullet,Gunners);
             //HitBullet(_frameCount,bullet);
-            HitLand(_frameCount, bullet);
-            HitGunner(_frameCount, bullet, Gunners);
+            HitLand(frameCount, bullet);
+            HitGunner(frameCount, bullet, Gunners);
         }
     }
     void HitLand(int frame,BulletData bullet)
@@ -336,69 +199,102 @@ public class Logic
     }
    
 
-
-
-
-    bool IsNowCalculating(BulletData bullet)
+    bool IsNowCalculating(BulletData bullet,int now)
     { //現在のフレームが計算開始フレーム以上かつ、（　計算が終了していない または 計算終了フレーム以下。(再計算対応))
-        return bullet?.sFrame <= _frameCount && ( bullet?.eFrame == -1 || bullet?.eFrame >= _frameCount);
+        return bullet?.sFrame <= now && ( bullet?.eFrame == -1 || bullet?.eFrame >= now);
     }
-
-
-    int NowDamage(int id) => _logBullet.Aggregate(0, (dmg, bullet) => bullet.hitGunnerIdsAndDamage.ContainsKey(id) ? dmg + bullet.hitGunnerIdsAndDamage[id] : dmg);
-
-
-
-    public float FrameToTime(int frame)
+    //まだ計算開始してない
+    bool IsFutureCalcurate(BulletData bullet, int past)
     {
-        return SPF * frame;
-    }
-    /*
-    public int TimeToFrame(float time)
-    {
-        return Mathf.CeilToInt(time / SPF);
-    }
-    */
-
-
-
-    public void Recalc(int pastFrame)
-    {
-
+        return bullet?.sFrame > past ;
     }
 
-    //1 クライアントフレームの計算
-    void CalcOneClientFrame(){
+}
 
-    }
+#if false
+//------------------------------------------
+//ずれ訂正
+//早送り(クライアントが遅れ)
+//巻き戻し
+//------------------------------------------
+//誤り訂正
+//再入力対策
+//入力飛ばし対策
 
-    /*
+//------------------------------------------
+//内部呼出し
+
+/*
+int loopMax = 500;
+int loopCnt = 0;
+while ((input.inFrame - _addFrame) > _frameCount && loopCnt < loopMax)
+{
+    SkipFrame();
+    TimeCollectForward();
+    Debug.Log((input.inFrame - _addFrame) - _frameCount);
+    loopCnt++;
+    //     CalcOneFrame();
+    //     NextFrame();
+}*/
+/*
+//誤りを探す
+//1すでに受け取っていた場合
+if (_logInput.Find(_ => _.number == input.number) != null)
+{
+    Debug.LogWarning("誤り検出");
+    return;
+}
+//2飛ばして受け取った場合
+if (input.number != 0 &&
+    _logInput.Find(_ => _.number == input.number - 1) == null)
+{
+    Debug.LogWarning("誤り検出");
+    return;
+}
+
+_logInput.Add(input);
+
+//誤りを探す
+//1すでに受け取っていた場合
+if (_inputNumber >= input.number)
+{
+    Debug.LogWarning("誤り検出");
+    return;
+}
+//2飛ばして受け取った場合
+if (_inputNumber + 1 < input.number)
+{
+    Debug.LogWarning("誤り検出");
+    return;
+}*/
+
+
+/*
 //弾道計算
 //斜方投射になる
 //cx = strong x cos (angle) x time
 //cy = stromg x sin (angle) x time - 1/2 x g x time^2
 void CalcOrbit(float time, BulletData bullet)
 {
-    MstBulletRecord mstBullet = MasterDataManager.Get<MstBulletRecord>(bullet.bulletId);
-    var gx = mstBullet.gravx;
-    var gy = mstBullet.gravy;
-    var wei = mstBullet.weight;
-    var sx = bullet.sPos.x;
-    var sy = bullet.sPos.y;
-    var str = bullet.strength;
-    var ang = bullet.angle;
-    var rad = mstBullet.rad;
-    float cx = sx + (time * bullet.strength * Mathf.Cos(ang * Mathf.Deg2Rad)) * wei;
-    float cy = sy + (time * bullet.strength * Mathf.Sin(ang * Mathf.Deg2Rad)) * wei;
-    cy += gy * time * time / 2;
-    //        cx *= gx;
-    bullet.cRad = rad;
-    bullet.cPos.x = cx;
-    bullet.cPos.y = cy;
+MstBulletRecord mstBullet = MasterDataManager.Get<MstBulletRecord>(bullet.bulletId);
+var gx = mstBullet.gravx;
+var gy = mstBullet.gravy;
+var wei = mstBullet.weight;
+var sx = bullet.sPos.x;
+var sy = bullet.sPos.y;
+var str = bullet.strength;
+var ang = bullet.angle;
+var rad = mstBullet.rad;
+float cx = sx + (time * bullet.strength * Mathf.Cos(ang * Mathf.Deg2Rad)) * wei;
+float cy = sy + (time * bullet.strength * Mathf.Sin(ang * Mathf.Deg2Rad)) * wei;
+cy += gy * time * time / 2;
+//        cx *= gx;
+bullet.cRad = rad;
+bullet.cPos.x = cx;
+bullet.cPos.y = cy;
 }*/
-    //    public List<>
-}
-#if false
+//    public List<>
+
 //先に計算しておく版
     void PreCalcBullet(BulletData bullet){
         CalcImaginaryHitPosition(bullet);

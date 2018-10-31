@@ -13,6 +13,7 @@ public class GameViewManager : MonoBehaviourWithStatemachine<GameViewManager.Sta
     {
         public GameObject Model;
         public int number;
+        public bool isCalled;
     }
 
     class GunnerViewData
@@ -48,7 +49,7 @@ public class GameViewManager : MonoBehaviourWithStatemachine<GameViewManager.Sta
         yield return null;
     }
 	IEnumerator Loop(){
-        while(!_logicManager.IsFinish){
+        while(!_logicManager.IsFinish()){
             foreach (var gunner in _logicManager.Gunners)
             {
                 GunnerViewData data = _gunnerInstance.Find(_ => _.Id == gunner.id);
@@ -57,6 +58,7 @@ public class GameViewManager : MonoBehaviourWithStatemachine<GameViewManager.Sta
             }
             foreach(var bullet in _logicManager.NowBullets){
                 BulletViewData data = _bulletInstance.Find(_ => _.number == bullet.number);
+
                 if(data == null){
                     data = new BulletViewData()
                     {
@@ -65,9 +67,20 @@ public class GameViewManager : MonoBehaviourWithStatemachine<GameViewManager.Sta
                     };
                     _bulletInstance.Add(data);
                 }
+                data.isCalled = true;
                 data.Model.transform.localPosition = bullet.cPos;
                 data.Model.transform.localScale = new Vector3(1, 1, 1) * bullet.cRad;
             }
+            _bulletInstance.RemoveAll(_ =>
+            {
+                bool r = !_.isCalled;
+                _.isCalled = false;
+                if (r)
+                {
+                    Destroy(_.Model);
+                }
+                return r;
+            });
             yield return null;
         }
         Next(State.End);

@@ -67,7 +67,7 @@ public class DebugSequence : SingletonMonoBehaviourWithStatemachine<DebugSequenc
                 angle = angle,
                 type = "bullet",
                 strong = strong,
-                frame = _logicManager.Frame
+                frame = _logicManager.FrameCount
             }
         );
     }
