@@ -84,8 +84,12 @@ public class WebSocketModule
     }
     public void Send(string msg)
     {
-        Debug.Log("[ws] Send : "+ msg);
-        ws?.Send(msg);
+        if (IsConnect())
+        {
+            Debug.Log("[ws] Send : " + msg);
+
+            ws?.Send(msg);
+        }
     }
 
     public void Close()

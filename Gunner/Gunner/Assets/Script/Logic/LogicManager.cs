@@ -56,8 +56,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
-            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),speed = -0.1f ,rad = 5},
-            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),speed = 0.1f ,rad = 5}
+            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),Direction = -1,speed = 3f ,rad = 5, cKnockback = 0},
+            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),Direction = 1,speed = 3f ,rad = 5, cKnockback = 0}
         });
         _frameCount = 0;
         _collectTime = 0;

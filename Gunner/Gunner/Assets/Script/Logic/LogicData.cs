@@ -12,11 +12,11 @@ public class GunnerData
     public int Direction = 1;// 左向き -1
     public int sHp;
     public int cHp;
-    public float kbLog;//今までのkb値の累計
+    public int cKnockback;//今までのkb値の累計
     public float rad;
     public void CalcPos(float time)
     {
-        cPos = sPos + new Vector2(Direction * (speed * time + kbLog), 0);
+        cPos = sPos + new Vector2(Direction * (speed * time + cKnockback), 0);
     }
 
 }
@@ -41,6 +41,7 @@ public class InputData
 //送受信しない
 public class BulletData
 {
+    public int knockback;
     public int number; //固有のID 追跡用
     public int bulletId; // MstBulletRecord のID
     public int gunnerId; // 砲撃者のID
@@ -51,6 +52,7 @@ public class BulletData
     public float angle;// 1/10
     public float cRad;
     public Vector2 sPos;//始点
+
     //public Vector2 iePos;//imaginary終点 そのまま着弾した場合の終点
     public Vector2 ePos;//true終点 相手の弾によっても変化
     public Dictionary<int, int> hitGunnerIdsAndDamage;//ヒットしたプレイヤーと受けたダメージのペア
