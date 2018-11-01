@@ -61,8 +61,13 @@ public class Logic
         List<BulletData> futureBullet = _logBullet.FindAll(_ => IsFutureCalcurate(_, frameCount));
         futureBullet.AddRange(_nowBullet.FindAll(_ => IsFutureCalcurate(_, frameCount)));
         _logBullet.RemoveAll(_ => IsNowCalculating(_, frameCount) || IsFutureCalcurate(_, frameCount));
-        _nowBullet.RemoveAll(_ => IsFutureCalcurate(_, frameCount));
+        _nowBullet.RemoveAll(_ =>
+        {
+            _.hitGunnerIdsAndDamage.Clear();
+            return IsFutureCalcurate(_, frameCount);
+        });
         _reserveBullet.AddRange(futureBullet);
+        _reserveBullet.ForEach(_=>_.hitGunnerIdsAndDamage.Clear());
         _nowBullet.AddRange(reCalcBullet);
     }
 

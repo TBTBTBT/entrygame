@@ -119,16 +119,17 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
             case FrameState.None:
                // Debug.Log("同一F");
                 break;
+            case FrameState.Skip:
             case FrameState.New:
                // Debug.Log("new");
                 _frameCount++;
                 _logic.Calc(FrameCount);
                 break;
-            case FrameState.Skip:
+            //case FrameState.Skip:
 
                 //前フレームから今フレームまでの差を計算
-                CalcDiffFrame();
-                break;
+            //    CalcDiffFrame();
+            //    break;
             case FrameState.RollBack:
                 Debug.Log("待ち");
                 break;
@@ -191,15 +192,21 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         }
 
     }
-
     void RecieveInput(string msg)
     {
         MsgRoot<MsgInput> obj = JsonUtility.FromJson<MsgRoot<MsgInput>>(msg);
         if ((obj.data.frame - _addFrame) > _frameCount)
         {//スキップ
-            _collectTime += (obj.data.frame - _addFrame) - _frameCount;
+            Debug.Log("Skip");
+            _collectTime += ((obj.data.frame - _addFrame) - _frameCount);
+            Debug.Log(_collectTime);
         }
 
+        if (_frameCount >= obj.data.frame)
+        {
+            Debug.LogWarning("誤り検出");
+            RollBack(obj.data.frame - 1);
+        }
         if (_inputNumber >= 0)
         {
             //同一もしくは過去の入力
@@ -215,6 +222,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
                 Debug.LogWarning("誤り検出");
                 return;
             }
+
         }
 
         _logic.AddInput(new InputData()
@@ -227,7 +235,13 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
             strength = obj.data.strong,
             number = obj.data.number
         });
-
+        _inputNumber = obj.data.number;
+    }
+    //誤り制御
+    void RollBack(int frame)
+    {
+        _frameCount = frame;
+        _logic.RollBack(frame);
     }
 
     //----------------------------------------------------------------------------

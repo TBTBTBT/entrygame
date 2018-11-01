@@ -99,7 +99,11 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
     public void OnRecieveMessageGame(UnityAction<string> cb){
         if (_testMode)
         {
-            _gameModule?.OnRecieveMessage.AddListener(_=> { StartCoroutine(DelayMessage(_, cb)); });
+            _gameModule?.OnRecieveMessage.AddListener(_=>
+            {
+                Debug.Log("sleep");
+                System.Threading.Thread.Sleep(1000);
+                Debug.Log("endsleep"); cb(_); });
         }
         else
         {
@@ -110,7 +114,8 @@ public class NetworkModuleManager: MonoBehaviourWithStatemachine<NetworkModuleMa
     {
         if (_testMode)
         {
-            _matchingModule?.OnRecieveMessage.AddListener(_=> { StartCoroutine(DelayMessage(_, cb)); });
+            _matchingModule?.OnRecieveMessage.AddListener(_ => { System.Threading.Thread.Sleep(1000); cb(_); });
+            //_matchingModule?.OnRecieveMessage.AddListener(_=> { StartCoroutine(DelayMessage(_, cb)); });
         }
         else
         {
