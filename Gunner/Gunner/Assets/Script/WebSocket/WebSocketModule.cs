@@ -51,7 +51,9 @@ public class WebSocketModule
         };
         ws.OnMessage += (sender, e) =>
         {
+
             Debug.Log("[ws] Message:" + e.Data);
+            Debug.Log("[ws] Size:" + e.RawData.Length);
             onmessage?.Invoke(sender, e);
         };
 
@@ -68,7 +70,7 @@ public class WebSocketModule
         };
         //ws.Log.Level = LogLevel.Debug;
         //ws.Log.File = Application.dataPath +"/log.txt";
-        //ws.SetProxy("http://157.109.25.6:3128", "", "");
+        ws.SetProxy("http://157.109.25.6:3128", "", "");
         // ws.Log.Level = LogLevel.Trace;
         ws.ConnectAsync();
 

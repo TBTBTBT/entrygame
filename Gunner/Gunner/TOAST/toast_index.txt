@@ -1,0 +1,55 @@
+TOAST
+
+TgamesOriginalAssetSTorage
+
+概要
+
+ゲーム制作に汎用的に使用できるアセット群
+
+状態
+
+DRAF : 草案
+HIST : 過去の利用可能だった状態
+BEST : 実際に利用されている 利用可能で、現在の最適状態
+IDEA : 最適化の案が浮かんだ状態
+EXPM : 実験状態 サンプル作成
+
+関係
+
+A->B 依存 Bのアセットが必要
+!!:toolname 外部ツールを使用
+
+分類
+
+GE:汎用
+UI:インターフェース、表示
+NW:通信
+AD:広告
+TOASTINDEX
+
+GE
+GE001.スクリプトベースのStateMachine : IDEA 1
+GE002.JSON形式のマスターデータ : BEST
+GE003.シングルトンパターン : BEST
+
+UI
+UI001.UGUIを利用したタッチ機能 : EXPM
+UI002.UGUIを利用したダイアログ : DRAF 1
+
+NW
+NW001.Wssharpを用いたWebSocket通信汎用モジュール : IDEA 2 !!:websocketsharp.dll
+NW002.Http通信 :DRAF 2
+NW003.MongoDbデータベース操作 : DRAF 3
+
+案状態
+
+TOASTDRAFT
+
+1.ダイアログ
+2.HTTP
+3.データベース策定
+
+TOASTIDEA
+
+1.サブステート機能
+2.websocketsharpに依存しないwebsocket通信
