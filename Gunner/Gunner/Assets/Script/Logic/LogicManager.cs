@@ -37,7 +37,7 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
     //data
     //----------------------------------------------------------------------------
     
-    private readonly int TIME_DIVISION = 20;//1計算フレームの長さ 1000 / x
+    private readonly int TIME_DIVISION = 60;//1計算フレームの長さ 1000 / x
     public int FrameCount => _frameCount;
     private int _frameCount = 0;
     private int _addFrame = 0;
@@ -56,8 +56,8 @@ public class LogicManager : MonoBehaviourWithStatemachine<LogicManager.State>
         _logic = new Logic();
         _logic.Init(new List<GunnerData>()
         {
-            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),Direction = -1,speed = 3f ,rad = 5, cKnockback = 0},
-            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),Direction = 1,speed = 3f ,rad = 5, cKnockback = 0}
+            new GunnerData(){sHp = 1000,id = 1,sPos = new Vector2(100,10),cPos = new Vector2(100,10),Direction = -1,speed = 3f ,rad = 5, cKnockback = 0},
+            new GunnerData(){sHp = 1000,id = 2,sPos = new Vector2(-100,10),cPos = new Vector2(-100,10),Direction = 1,speed = 3f ,rad = 5, cKnockback = 0}
         });
         _frameCount = 0;
         _collectTime = 0;
